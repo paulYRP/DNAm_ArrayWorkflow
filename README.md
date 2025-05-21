@@ -50,7 +50,7 @@ The repository is organized to facilitate reproducible analysis, modular develop
 
 This project supports automated execution of all major steps using a Makefile. For high-performance computing (HPC) environments (QUT's Aqua cluster), the pipeline is compatible with PBS Pro job submission.
 
-**Run Locally via Makefile**
+**Run Locally via Makefile\n**
 Use GNU Make to control execution of individual scripts or entire workflows.
 
 ```bash
@@ -59,7 +59,7 @@ make status
 make clean
 ```
 
-**Submit via PBS (on Aqua HPC)**
+**Submit via PBS (on Aqua HPC)\n**
 To run the full pipeline in a high-performance environment like Aqua (QUT). 
 
 ```bash
