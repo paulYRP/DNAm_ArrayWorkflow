@@ -69,7 +69,7 @@ qsub pipeline.pbs
 --------------
 ## References
 
-```r
+```bash
 1. Bates, D., Mächler, M., Bolker, B., & Walker, S. (2015). Fitting Linear Mixed-Effects Models Usinglme4. Journal of Statistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01 
 2. Fisher, J. (2017). BeadSorted.Saliva.EPIC. In https://bioconductor.org/packages/release/data/experiment/vignettes/BeadSorted.Saliva.EPIC/inst/doc/BeadSorted.Saliva.EPIC.html
 3. Hansen, K. D., & Fortin, J.-P. (2025). The minfi User’s Guide. In https://bioconductor.org/packages/devel/bioc/vignettes/minfi/inst/doc/minfi.html
