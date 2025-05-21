@@ -60,7 +60,7 @@ make clean
 ```
 
 **Submit via PBS (on Aqua HPC)**: 
-To run the full pipeline in a high-performance environment like Aqua (QUT). 
+To run the full pipeline in a high-performance environment as Aqua (QUT). 
 
 ```bash
 qsub pipeline.pbs
