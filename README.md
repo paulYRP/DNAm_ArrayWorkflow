@@ -8,7 +8,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 --------------
 ## Hardware Requirements
 
-- HPC or workstation with sufficient RAM for large array datasets (≥ 5TB recommended)
+- HPC or workstation with sufficient RAM for large array datasets (≥ 8TB recommended)
 - For visualization, interactive usage of RStudio (desktop/server) is recommended
 
 ## Software Requirements
