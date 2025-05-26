@@ -18,7 +18,6 @@
 #   --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS \
 #   --factorVars Sex,Ethnicity,TraumaDefinition \
 #   --lmeLibs lmerTest \
-#   --prsMap DASS_Depression:PRS_Depression,DASS_Anxiety:PRS_Anxiety \
 #   --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 #   --cpgPrefix cg \
 #   --cpgLimit 1000 \
@@ -68,7 +67,6 @@ suppressPackageStartupMessages({
 #   --factorVars            [STR]    Covariates to convert to factor, comma-separated (e.g., "Sex,Ethnicity")
 #   --lmeLibs                     [STR]    Comma-separated list of libraries for LME modeling (e.g., "lmerTest")
 #   --libPath                     [STR]    R library path for parallel cluster evaluation
-#   --prsMap                     [STR]    Optional: Comma-separated mapping of phenotype to PRS covariates (e.g., "phenotype:PRS")
 #   --cpgPrefix                   [STR]    Prefix pattern to match CpG probe IDs (default: "cg")
 #   --cpgLimit                    [INT]    Maximum number of CpGs to include (default: 1000); NA for all
 #   --nCores                      [INT]    Number of cores to parallelize LME fitting
@@ -333,13 +331,15 @@ for (pheno in opt$phenotypeList) {
         }
         
         cat("Running LME for:", pheno, "\n")
-        
-        # Include PRS if defined for this phenotype
+       
         prsVar <- if (pheno %in% names(opt$prsMapList)) opt$prsMapList[[pheno]] else NULL
         allCovariates <- if (!is.null(prsVar)) c(opt$covariateList, prsVar) else opt$covariateList
-        
-        modelFormula <- paste("~", pheno, "+", paste(allCovariates, collapse = " + "))
+        fixedTerms <- setdiff(allCovariates, c(pheno, opt$interactionTerm))
+        modelFormula <- paste("~", 
+                              paste(c(paste0(pheno, "*", opt$interactionTerm), fixedTerms), collapse = " + "), 
+                              "+ (1|", opt$personVar, ")")
         cat("Formula:", modelFormula, "\n")
+        
         
         fitResult <- lme(
                 phenoScore = pheno,
