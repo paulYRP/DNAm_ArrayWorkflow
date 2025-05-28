@@ -495,6 +495,9 @@ clockList <- grep(opt$clockPattern,
 # ----------- Fit Models for T1 and T2 -----------
 cat("Fitting epigenetic age models for T1 and T2...\n")
 
+phenoDNAmAgeLM_T1 <- list()
+phenoDNAmAgeLM_T2 <- list()
+
 for (pheno in opt$phenotypeList) {
         
         cat("Running LM for:", pheno, "\n")
