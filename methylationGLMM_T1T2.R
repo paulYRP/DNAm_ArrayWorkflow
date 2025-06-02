@@ -94,7 +94,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--timeVar", default = "Timepoint", help = "Column name indicating timepoints (e.g., T1, T2) [default: %default]"),
         make_option("--phenotypes", default = "DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore", help = "Comma-separated phenotype scores [default: %default]"),
         make_option("--covariates", default = "Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS", help = "Comma-separated covariates [default: %default]"),
-        make_option("--factorVars", default = "Sex,Ethnicity,TraumaDefinition", help = "Variables to convert to factor [default: %default]"),
+        make_option("--factorVars", default = "Sex,Ethnicity,TraumaDefinition,Timepoint", help = "Variables to convert to factor [default: %default]"),
         make_option("--lmeLibs", default = "lme4,lmerTest", help = "Comma-separated list of libraries for LME models [default: %default]"),
         make_option("--prsMap", default = NULL, help = "Optional: comma-separated mapping of phenotype to PRS covariates (e.g., phenotype:PRS)"),
         make_option("--libPath", default = NULL, help = "Library path for parallel nodes (NULL disables setting). Aqua: ~/R/x86_64-pc-linux-gnu-library/4.4"),
@@ -226,7 +226,10 @@ if (!(opt$personVar %in% colnames(phenoBT1T2))) {
                                                               phenoBT1T2$SID)))
         
         cat("Example mapping of SID to person ID:\n")
-        print(head(phenoBT1T2[, c("SID", opt$personVar)], 10))
+        print(head(phenoBT1T2[order(phenoBT1T2[[opt$personVar]], 
+                                    phenoBT1T2$SID), 
+                              c("SID", opt$personVar)], 20
+        ))
         
         cat("Count of records per person ID:\n")
         print(table(phenoBT1T2[[opt$personVar]]))
