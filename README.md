@@ -2,7 +2,7 @@
 # DNAm EPIC Array Analysis Workflow
 --------------
 
-This repository contains a reproducible pipeline for DNA methylation (DNAm) analysis using Illumina MethylationEPIC v2.0 arrays. It includes preprocessing, quality control, phenotype merging, and statistical modeling (GLM and GLMM) for mental health phenotypes using both `minfi` and `ewastools` frameworks. The pipeline is modular, HPC-compatible, and fully parameterized via command-line arguments.
+This repository contains a reproducible pipeline for DNA methylation (DNAm) analysis using Illumina MethylationEPIC v2.0 arrays. It includes preprocessing, quality control, phenotype merging, and statistical modeling (GLM and GLMM) for mental health phenotypes using both `minfi`, `watermelon` and `ewastools` frameworks. The pipeline is modular, HPC-compatible, and fully parameterized via command-line arguments.
 
 It was used in the study attached **A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**. 
 
