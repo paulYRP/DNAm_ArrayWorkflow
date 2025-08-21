@@ -23,7 +23,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 ## Software Requirements
 
 - OS: Linux (tested on Rocky Linux 9.2 via Aqua HPC)
-- R version: ≥4.3.0 (tested on 4.4.1)
+- R version: ≥4.4.0 (tested on 4.4.1)
 - R packages (CRAN + Bioconductor):
 
 --------------
