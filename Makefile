@@ -10,7 +10,8 @@ RESULTS_DIR = results
 FIGURES_DIR = figures
 
 # Default target
-all:	rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+all: \
+	rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	rData/svaEnmix/metrics/ctrlsva.done \
@@ -21,16 +22,32 @@ all:	rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RDa
 	data/methylationGLM_T1/annotatedGLM.csv \
 	data/methylationGLMM_T1T2/annotatedLME.csv \
 	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T1.RData \
-	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData 
+	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData
+
+# ----------------------------------------------------
+# Group target: first3 (Steps 1–3 only)
+# ----------------------------------------------------
+.PHONY: f3
+FIRST3 = \
+  rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+  rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+  rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+  data/preprocessingMinfiEwasWater/phenoLC.csv \
+  rData/svaEnmix/metrics/ctrlsva.done \
+  data/preprocessingPheno/phenoT1.csv \
+  data/preprocessingPheno/phenoT2.csv \
+  data/preprocessingPheno/phenoT1T2.csv
+
+f3: $(FIRST3)
 
 # ----------------------------------------------------
 # Step 1: Minfi Preprocessing
 # ----------------------------------------------------
 rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData: preprocessingMinfiEwasWater.R
+rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 	Rscript preprocessingMinfiEwasWater.R \
-	  --nSamples NA \
 	  --pvalThreshold 0.01 \
 	  --mafThreshold 0.1 \
 	  --plotGroupVar Sex \
@@ -41,7 +58,6 @@ rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData: 
 # ----------------------------------------------------
 rData/svaEnmix/metrics/ctrlsva.done: svaEnmix.R data/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript svaEnmix.R \
-	  --nSamples NA \
 
 # ----------------------------------------------------
 # Step 3: Merge Phenotype
