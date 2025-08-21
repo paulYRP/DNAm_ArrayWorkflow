@@ -24,7 +24,7 @@ The repository is organized to facilitate reproducible analysis, modular develop
 
 ```bash
 ├── data/
-│   ├── preprocessingMinfi/
+│   ├── preprocessingMinfiEwasWater/
 │   │   ├── idats/                          # Folder containing raw IDAT files
 │   │   ├── pheno.csv                       # Phenotype file with sample metadata
 │   │   └── 12864_2024_10027_MOESM8_ESM.csv # Optional: Cross-reactivity comparison reference
@@ -35,8 +35,7 @@ The repository is organized to facilitate reproducible analysis, modular develop
 ├── preliminaryResults/                     # Output tables and summary statistics
 ├── reports/                                # Optional rendered reports (e.g., HTML, PDF)
 │
-├── preprocessingMinfi.R                    # Minfi-based preprocessing pipeline
-├── preprocessingEwastools.R                # Ewastools-based preprocessing pipeline
+├── preprocessingMinfiEwasWater.R           # Minfi-Ewastool-WateRmelon-based preprocessing pipeline
 ├── preprocessingPheno.R                    # Phenotype merge and factor conversion
 │
 ├── methylationGLM_T1.R                     # GLM analysis per CpG at T1
