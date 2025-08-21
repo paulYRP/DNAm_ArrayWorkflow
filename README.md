@@ -9,7 +9,8 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 ### 21/08/2025
 - It is compatible with all types of tissues using [ewastools](https://hhhh5.github.io/ewastools/articles/exemplary_ewas.html) 
 - `ctrlsva` added from [ENmix](https://www.bioconductor.org/packages/devel/bioc/vignettes/ENmix/inst/doc/ENmix.html) 
-- `adjusted_funnorm` added from [wateRmelon](https://www.bioconductor.org/packages/release/bioc/vignettes/wateRmelon/inst/doc/wateRmelon.html) 
+- `adjusted_funnorm` added from [wateRmelon](https://www.bioconductor.org/packages/release/bioc/vignettes/wateRmelon/inst/doc/wateRmelon.html)
+- `make -j1 f3` added to only run the first 3 steps.
 
 ## Articles:
 - A Novel Longitudinal Epigenome-Wide Study of Posttraumatic 
