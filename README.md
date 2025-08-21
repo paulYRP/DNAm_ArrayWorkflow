@@ -13,7 +13,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 - `make -j1 f3` added to only run the first 3 steps. Output:
   - Metrics (beta, M)
   - Object (RGSet, ...)
-  - CSV file with Cell estimation.
+  - CSV file with cell estimation.
 
 ## Articles:
 - A Novel Longitudinal Epigenome-Wide Study of Posttraumatic 
