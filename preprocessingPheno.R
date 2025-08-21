@@ -8,16 +8,10 @@
 # Usage Example (Full version):
 # ==============================================================================
 # Rscript preprocessingPheno.R \
-#   --phenoFile data/preprocessingMinfi/pheno.csv \
-#   --phenoEWAS data/preprocessingEwastools/pheno_ewasQC.csv \
-#   --betaPath rData/preprocessingMinfi/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-#   --mPath rData/preprocessingMinfi/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-#   --cnPath rData/preprocessingMinfi/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-#   --dropColumnsPhenoEWAS SampleID \
-#   --colsToRenamePhenoEWAS failed,Leukocytes,Epithelial.cells,outlier,outlierYN,donor_id,n \
-#   --mergeKey SID \
-#   --factorVars Sex,Ethnicity,TraumaDefinition \
-#   --factorPrefixes Sex,Ethn,TraD \
+#   --phenoFile data/preprocessingMinfiEwasWater/pheno.csv \
+#   --betaPath rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+#   --mPath rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
+#   --cnPath rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 #   --timepoints 1,2,3 \
 #   --combineTimepoints 1,3 \
 #   --outputPheno data/preprocessingPheno/ \
@@ -28,7 +22,7 @@
 # Usage Example (Default values with key parameters):
 # ==============================================================================
 # Rscript preprocessingPheno.R \
-#   --phenoFile data/preprocessingMinfi/pheno.csv \
+#   --phenoFile data/preprocessingMinfiEwasWater/pheno.csv \
 #   --phenoEWAS data/preprocessingEwastools/pheno_ewasQC.csv
 
 # ==============================================================================
@@ -56,26 +50,27 @@
 suppressPackageStartupMessages({
         library(optparse)
         library(dplyr)
+        library(tidyverse)
+        library(readr)
+        library(dplyr)
+        library(stringr)
+        library(purrr)
 })
 
 # ----------- Define Input Arguments -----------
 opt <- parse_args(OptionParser(option_list = list(
-        make_option("--phenoFile", default = "data/preprocessingMinfi/pheno.csv", help = "Input phenotype CSV file [default: %default]", metavar = "FILE"),
-        make_option("--phenoEWAS", default = "data/preprocessingEwastools/pheno_ewasQC.csv", help = "EWAS phenotype CSV with QC columns", metavar = "FILE"),
-        make_option("--betaPath", default = "rData/preprocessingMinfi/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to Beta matrix RData [default: %default]", metavar = "FILE"),
-        make_option("--mPath", default = "rData/preprocessingMinfi/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to M-values RData [default: %default]", metavar = "FILE"),
-        make_option("--cnPath", default = "rData/preprocessingMinfi/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to CN matrix RData [default: %default]", metavar = "FILE"),
-        make_option("--dropColumnsPhenoEWAS", default = "SampleID", help = "Columns to drop from phenoEWAS [default: %default]", metavar = "COLS"),
-        make_option("--colsToRenamePhenoEWAS", default = "failed,Leukocytes,Epithelial.cells,outlier,outlierYN,donor_id,n", help = "Comma-separated columns to rename with '.EWAS'", metavar = "COLS"),
-        make_option("--mergeKey", default = "SID", help = "Column name used to merge pheno and phenoEWAS [default: %default]", metavar = "COL"),
-        make_option("--factorVars", default = "Sex,Ethnicity,TraumaDefinition", help = "Comma-separated columns to convert to factor", metavar = "COLS"),
-        make_option("--factorPrefixes", default = "Sex,Ethn,TraD", help = "Comma-separated prefixes to prepend to factor levels", metavar = "PREFS"),
-        make_option("--timepoints", default = "1,2,3", help = "Timepoints to subset for beta and M values", metavar = "T1,T2,T3"),
-        make_option("--combineTimepoints", default = "1,3", help = "Timepoints to combine for longitudinal analysis", metavar = "T1,Tn"),
+        make_option("--phenoFile", default = "data/preprocessingMinfiEwasWater/phenoLC.csv", help = "Input phenotype CSV file [default: %default]", metavar = "FILE"),
+        make_option("--sepType", default = "" ,  type = "character", help = "Separator for phenotype file (e.g., ',' or '\\t')"),
+        make_option("--betaPath", default = "rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to Beta matrix RData [default: %default]", metavar = "FILE"),
+        make_option("--mPath", default = "rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to M-values RData [default: %default]", metavar = "FILE"),
+        make_option("--cnPath", default = "rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to CN matrix RData [default: %default]", metavar = "FILE"),
+        make_option("--SampleID", type = "character", default = "SampleName", help = "Column name to use as sample IDs"),
+        make_option("--timepoints", default = "1,2", help = "Timepoints to subset for beta and M values", metavar = "T1,T2,T3"),
+        make_option("--combineTimepoints", default = "1,2", help = "Timepoints to combine for longitudinal analysis", metavar = "T1,Tn"),
         make_option("--outputPheno", default = "data/preprocessingPheno/", help = "Path to save final phenotype CSVs", metavar = "DIR"),
         make_option("--outputRData", default = "rData/preprocessingPheno/metrics", help = "Directory to save processed RData objects metrics", metavar = "DIR"),
         make_option("--outputRDataMerge", default = "rData/preprocessingPheno/mergeData", help = "Directory to save processed RData objects mergedata", metavar = "DIR"),
-        make_option("--outputLogs", default = "logs/preprocessingPheno", help = "Directory for all log output [default: %default]", metavar = "DIR"),
+        make_option("--outputLogs", default = "logs/", help = "Directory for all log output [default: %default]", metavar = "DIR"),
         make_option("--scriptLabel", default = "preprocessingPheno", help = "Label for log file naming [default: %default]", metavar = "STR")
         
 )))
@@ -96,22 +91,20 @@ sink(logCon, type = "message")
 
 # ----------- Logging Start Info -----------
 cat("==== Starting Phenotype Preprocessing ====\n")
-cat("Start Time: ", format(Sys.time()), "\n")
-cat("Log file path: ", logFilePath, "\n\n")
+cat("Start Time:               ", format(Sys.time()), "\n")
+cat("Log file path:            ", logFilePath, "\n\n")
 cat("Phenotype file:           ", opt$phenoFile, "\n")
-cat("EWAS file:                ", opt$phenoEWAS, "\n")
 cat("Beta path:                ", opt$betaPath, "\n")
 cat("M-values path:            ", opt$mPath, "\n")
-cat("CN path:                  ", opt$cnPath, "\n")
-cat("Merged phenotype output:  ", opt$outputPheno, "\n")
-cat("RData output directory:   ", opt$outputRData, "\n\n")
-cat("Drop EWAS columns:        ", opt$dropColumnsPhenoEWAS, "\n")
-cat("Columns to rename:        ", opt$colsToRenamePhenoEWAS, "\n")
-cat("Merge key:                ", opt$mergeKey, "\n")
-cat("Factor columns:           ", opt$factorVars, "\n")
-cat("Factor prefixes:          ", opt$factorPrefixes, "\n")
-cat("Timepoints:               ", opt$timepoints, "\n")
-cat("Combined timepoints:      ", opt$combineTimepoints, "\n")
+cat("CN path:                  ", opt$cnPath, "\n\n")
+
+cat("Identifier column:        ", opt$SampleID, "\n")
+cat("Timepoints (if present):  ", opt$timepoints, "\n")
+cat("Combine timepoints:       ", opt$combineTimepoints, "\n\n")
+
+cat("Output phenotype dir:     ", opt$outputPheno, "\n")
+cat("RData metrics dir:        ", opt$outputRData, "\n")
+cat("RData merge dir:          ", opt$outputRDataMerge, "\n\n")
 cat("=======================================================================\n")
 
 # ----------- Load Data -----------
@@ -123,48 +116,27 @@ cat("Beta dimensions: ", dim(beta), "\n")
 cat("M dimensions: ", dim(m), "\n")
 cat("CN dimensions: ", dim(cn), "\n")
 
-pheno <- read.csv(opt$phenoFile)
-phenoEWAS <- read.csv(opt$phenoEWAS)
-
-cat("pheno colnames: ", paste(colnames(pheno), collapse = ", "), "\n")
-cat("==============\n")
-cat("phenoEWAS colnames: ", paste(colnames(phenoEWAS), collapse = ", "), "\n")
-
-cat("=======================================================================\n")
-
-# ----------- Preprocessing Merge (pheno + phenoEWAS) -----------
-cat("Merging pheno with EWAS-based annotations...\n")
-
-# Drop specified columns
-colsToDrop <- strsplit(opt$dropColumnsPhenoEWAS, ",")[[1]]
-phenoEWAS <- phenoEWAS[, !(colnames(phenoEWAS) %in% colsToDrop), drop = FALSE]
-
-# Rename specific columns with suffix
-colsToRename <- strsplit(opt$colsToRenamePhenoEWAS, ",")[[1]]
-colnames(phenoEWAS)[colnames(phenoEWAS) %in% colsToRename] <- 
-        paste0(colnames(phenoEWAS)[colnames(phenoEWAS) %in% colsToRename], 
-               ".EWAS")
-
-# Merge using specified mergeKey
-mergeKey <- opt$mergeKey
-ewasCols <- c(mergeKey, colnames(phenoEWAS)[grepl(".EWAS$", 
-                                                  colnames(phenoEWAS))])
-pheno <- merge(pheno, phenoEWAS[, ewasCols], by = mergeKey)
-
-cat("Saving merged phenotype file to:", opt$outputPheno, "\n")
-write.csv(pheno, file = file.path(opt$outputPheno, "phenoEWAS.csv"), row.names = FALSE)
-
-cat("=======================================================================\n")
-
-# ----------- Convert Variables to Factor with Prefixes -----------
-varsToFactor <- strsplit(opt$factorVars, ",")[[1]]
-prefixes     <- strsplit(opt$factorPrefixes, ",")[[1]]
-
-for (i in seq_along(varsToFactor)) {
-        var <- varsToFactor[i]
-        prefix <- ifelse(i <= length(prefixes), prefixes[i], "")
-        pheno[[var]] <- factor(paste0(prefix, pheno[[var]]))
+# ----------- Read Phenotype File -----------
+if (opt$sepType == "\\t") {
+  sepChar <- "\t"
+} else if (opt$sepType == "") {
+  sepChar <- NULL
+} else {
+  sepChar <- opt$sepType
 }
+
+# Now read the phenotype file
+if (!is.null(sepChar)) {
+  pheno <- read.csv(opt$phenoFile, sep = sepChar)
+} else {
+  pheno <- read.csv(opt$phenoFile)
+}
+
+cat("Phenotype file loaded with", 
+    nrow(pheno), "samples and", ncol(pheno), "columns.\n")
+cat("Preview of phenoLC:\n")
+print(head(pheno[, 1:5])) 
+cat("=======================================================================\n")
 
 # ----------- Subsetting Timepoints & Data Splitting -----------
 timepoints <- as.numeric(strsplit(opt$timepoints, ",")[[1]])
@@ -210,9 +182,8 @@ cat("Saved combined phenotype file for T1T2 at:", opt$outputPheno, "\n")
 cat("=======================================================================\n")
 
 # ----------- Merge Beta Matrix with Phenotype ----------
-mergeBeta <- function(phenoFrame, betaMatrix, id1 = "SID", id2 = "Timepoint") {
-        rownames(phenoFrame) <- paste0(phenoFrame[[id1]], 
-                                       ".", phenoFrame[[id2]])
+mergeBeta <- function(phenoFrame, betaMatrix, id = opt$SampleID) {
+        rownames(phenoFrame) <- phenoFrame[[id]]
         matched <- intersect(rownames(phenoFrame), colnames(betaMatrix))
         phenoFrame <- phenoFrame[matched, ]
         betaMatrix <- betaMatrix[, matched]
@@ -270,6 +241,45 @@ cat("Combined data saved for timepoints:",
     paste(combineTPs, collapse = ", "), "\n")
 
 cat("Merged data saved to:", opt$outputRDataMerge, "\n")
+cat("=======================================================================\n")
+# ----------- Preprocessing Betas for Horvath Calculator -----------
+
+rownames(beta) <- str_replace(rownames(beta), "_.*$", "")
+
+betaCSV <- as.data.frame(beta)
+betaCSV <- tibble::rownames_to_column(betaCSV, var = "ProbeID")
+
+# Inspect changes
+dim(betaCSV)
+print(head(betaCSV)[1:5, 1:5])
+
+write.csv(betaCSV, file = "data/preprocessingPheno/beta.csv", row.names = TRUE)
+cat("Beta csv file saved for ClockFundation to data/preprocessingPheno/.\n")
+
+zip(zipfile = "data/preprocessingPheno/beta.zip", 
+    files = "data/preprocessingPheno/beta.csv", 
+    flags = "-j")
+cat("Beta zip file saved for ClockFundation to data/preprocessingPheno/.\n")
+
+# ----------- Preprocessing CSV for Horvath Calculator -----------
+
+# Rename the column "SampleName" to "id"
+pheno <- pheno %>%
+  rename(id = opt$SampleID)
+
+# Recode Sex only if values are not already "Male"/"Female"
+uniqueSex <- unique(pheno$Sex)
+
+if (!all(uniqueSex %in% c("Male", "Female"))) {
+  cat("Re-encoding Sex: 0 = Female, 1 = Male\n")
+  pheno$Sex <- ifelse(pheno$Sex == 0, "Female", "Male")
+} else {
+  cat("Sex column already contains 'Male' and 'Female'. Skipping recoding.\n")
+}
+
+write.csv(pheno, "data/preprocessingPheno/phenoCF.csv", row.names = FALSE)
+cat("Sample file saved for ClockFundation to data/preprocessingPheno/.\n")
+
 cat("=======================================================================\n")
 
 # ----------- Close Logging -----------
