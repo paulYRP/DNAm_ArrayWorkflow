@@ -236,8 +236,8 @@ K <- ncol(sva)
 # Fit linear models for each surrogate variable
 lmsvaFull <- lapply(1:K, function(i) 
   lm(sva[, i] ~ SentrixID + SentrixPosition,
-     data.frame("SentrixID" = as.factor(pData(RGSet)$SentrixID),
-                "SentrixPosition" = as.factor(pData(RGSet)$SentrixPosition)))
+     data.frame("SentrixID" = sentrixID,
+                "SentrixPosition" = sentrixPos))
 )
 
 lmsvaRed <- vector("list", K)
