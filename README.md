@@ -12,7 +12,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 - `adjusted_funnorm` added from [wateRmelon](https://www.bioconductor.org/packages/release/bioc/vignettes/wateRmelon/inst/doc/wateRmelon.html)
 - `make -j1 f3` added to execute only the first three steps. Output:
   - Metrics (beta, M)
-  - Object (RGSet, ...)
+  - Objects (RGSet, MSet ...)
   - CSV file with cell estimation
   - Surrogate variable report
 
