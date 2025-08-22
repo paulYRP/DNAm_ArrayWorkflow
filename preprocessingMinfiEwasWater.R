@@ -449,7 +449,7 @@ cat("=======================================================================\n")
 
 # Create clinical sex plot
 pSexD <- as.data.frame(pSex) 
-pSexD <- merge(pSexD, targets, by.x="row.names", by.y="SampleName")
+pSexD <- merge(pSexD, targets, by.x="row.names", by.y = opt$SampleID)
 head(pSexD[, 1:4])
 
 
