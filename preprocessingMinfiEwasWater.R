@@ -200,9 +200,9 @@ if (!dir.exists(enmixDir)) {
   dir.create(enmixDir, recursive = TRUE, showWarnings = FALSE)
 }
 
-# ----------- Prepare Subfolders for figures/qc -----------
+# ----------- Prepare Subfolders for rData/qc -----------
 
-qcDir <- file.path("figures", opt$scriptLabel, "qc")
+qcDir <- file.path("rData", opt$scriptLabel, "qc")
 
 if (!dir.exists(qcDir)) {
   dir.create(qcDir, recursive = TRUE, showWarnings = FALSE)
@@ -435,7 +435,7 @@ tiff(filename = pSexPath,
      res = 70, type = "cairo")
 
 plot(x = pSex$xMed, 
-     y = pSex$yMed, 
+     y = pSex$yMed,
      type = "n", 
      xlab = "X chr, median total intensity (log2)", 
      ylab = "Y chr, median total intensity (log2)")
