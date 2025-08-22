@@ -25,7 +25,7 @@ all: \
 	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData
 
 # ----------------------------------------------------
-# Group target: first3 (Steps 1–3 only)
+# Group target: first3 (Steps 1â€“3 only)
 # ----------------------------------------------------
 .PHONY: f3
 FIRST3 = \
@@ -54,7 +54,7 @@ data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 	  --lcRef salivaEPIC
 
 # ----------------------------------------------------
-# Step 2: Minfi Preprocessing
+# Step 2: Surrogate Variable Analysis
 # ----------------------------------------------------
 rData/svaEnmix/metrics/ctrlsva.done: svaEnmix.R data/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript svaEnmix.R \
