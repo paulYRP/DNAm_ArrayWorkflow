@@ -143,11 +143,16 @@ timepoints <- as.numeric(strsplit(opt$timepoints, ",")[[1]])
 cat("Subsetting to timepoints:", paste(timepoints, collapse = ", "), "\n")
 
 for (tp in timepoints) {
-        assign(paste0("phenoT", tp), subset(pheno, Timepoint == tp))
-        assign(paste0("betaT", tp), beta[, grepl(paste0("\\.", tp, "$"), 
-                                                 colnames(beta))])
-        assign(paste0("mT", tp), m[, grepl(paste0("\\.", tp, "$"), 
-                                           colnames(m))])
+  # Subset phenotype by Timepoint
+  phenoSub <- subset(pheno, Timepoint == tp)
+  assign(paste0("phenoT", tp), phenoSub)
+  
+  # Subset matrices using SID (SampleID) from phenoSub
+  sids <- phenoSub[[opt$SampleID]]
+  
+  assign(paste0("betaT", tp), beta[, sids])
+  assign(paste0("mT", tp),    m[,    sids])
+  assign(paste0("cnT", tp),   cn[,   sids])
 }
 
 # Save each subset
