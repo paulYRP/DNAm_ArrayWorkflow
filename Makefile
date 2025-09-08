@@ -25,7 +25,7 @@ all: \
 	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData
 
 # ----------------------------------------------------
-# Group target: first3 (Steps 1–3 only)
+# Group target: first3 (Steps 1to3 only)
 # ----------------------------------------------------
 .PHONY: f3
 FIRST3 = \
@@ -48,16 +48,22 @@ rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData
 rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 	Rscript preprocessingMinfiEwasWater.R \
+	  --sepType "\t" \
+	  --SampleID SID \
 	  --pvalThreshold 0.01 \
 	  --mafThreshold 0.1 \
 	  --plotGroupVar Sex \
-	  --lcRef salivaEPIC
+	  --lcRef salivaEPIC \
+	  --phenoOrder "SID;Timepoint;Sex;PredSex;Basename;SentrixBarcode;Chipposition"
 
 # ----------------------------------------------------
 # Step 2: Surrogate Variable Analysis
 # ----------------------------------------------------
 rData/svaEnmix/metrics/ctrlsva.done: svaEnmix.R data/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript svaEnmix.R \
+	  --SampleID SID \
+	  --SentrixIDColumn SentrixBarcode \
+	  --SentrixPositionColumn Chipposition
 
 # ----------------------------------------------------
 # Step 3: Merge Phenotype
@@ -69,8 +75,9 @@ data/preprocessingPheno/phenoT1T2.csv: preprocessingPheno.R data/preprocessingMi
 	  --betaPath rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	  --mPath rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	  --cnPath rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-	  --timepoints 1,2 \
-	  --combineTimepoints 1,2 \
+	  --SampleID SID \
+	  --timepoints 1,3 \
+	  --combineTimepoints 1,3 \
 
 # ----------------------------------------------------
 # Step 4: GLM for T1
@@ -81,8 +88,8 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R data/preprocessingP
 	  --outputLogs logs/methylationGLM_T1 \
 	  --outputRData rData/methylationGLM_T1/models \
 	  --outputPlots figures/methylationGLM_T1 \
-	  --phenotypes PCL_SUM,PCL5_B,PCL5_C,PCL5_D,PCL5_E,PTGIX_SUM,DASS_D,DASS_S,DASS_A,SSS8_SUM \
-	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS,BMI \
+	  --phenotypes DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore,PTGIX_TotalScore \
+	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS \
 	  --factorVars Sex,Ethnicity,TraumaDefinition \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
@@ -90,7 +97,7 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R data/preprocessingP
 	  --plotWidth 2000 --plotHeight 1000 --plotDPI 150 \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 	  --glmLibs glm2 \
-	  --prsMap PCL_SUM:PTSD_PRS,PCL5_B:PTSD_PRS,PCL5_C:PTSD_PRS,PCL5_D:PTSD_PRS,PCL5_E:PTSD_PRS,PTGIX_SUM:PTSD_PRS,DASS_D:MDD_PRS,DASS_S:PTSD_PRS,DASS_A:GAD_PRS,SSS8_SUM:MDD_PRS \
+	  --prsMap DASS_Depression:MDD_PRS,DASS_Anxiety:GAD_PRS,DASS_Stress:PTSD_PRS,PCL5_TotalScore:PTSD_PRS,MHCSF_TotalScore:PTSD_PRS,BRS_TotalScore:PTSD_PRS,PTGIX_TotalScore:PTSD_PRS \
 	  --summaryPval NA \
 	  --summaryResidualSD \
 	  --saveSignificantCpGs \
@@ -112,12 +119,12 @@ data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R data/methylat
 	  --outputPlots figures/methylationGLM_T1T2 \
 	  --personVar person \
 	  --timeVar Timepoint \
-	  --phenotypes PCL_SUM,PCL5_B,PCL5_C,PCL5_D,PCL5_E,PTGIX_SUM,DASS_D,DASS_S,DASS_A,SSS8_SUM \
+	  --phenotypes DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore,PTGIX_TotalScore \
 	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS,BMI \
 	  --factorVars Sex,Ethnicity,TraumaDefinition,Timepoint \
 	  --lmeLibs lme4,lmerTest \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
-	  --prsMap PCL_SUM:PTSD_PRS,PCL5_B:PTSD_PRS,PCL5_C:PTSD_PRS,PCL5_D:PTSD_PRS,PCL5_E:PTSD_PRS,PTGIX_SUM:PTSD_PRS,DASS_D:MDD_PRS,DASS_S:PTSD_PRS,DASS_A:GAD_PRS,SSS8_SUM:MDD_PRS \
+	  --prsMap DASS_Depression:MDD_PRS,DASS_Anxiety:GAD_PRS,DASS_Stress:PTSD_PRS,PCL5_TotalScore:PTSD_PRS,MHCSF_TotalScore:PTSD_PRS,BRS_TotalScore:PTSD_PRS,PTGIX_TotalScore:PTSD_PRS \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
 	  --nCores 64 \
@@ -131,37 +138,6 @@ data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R data/methylat
 	  --annotatedLMEOut data/methylationGLMM_T1T2
 
 # ----------------------------------------------------
-# Step 6: Epigenetic Clock Integration (T1 & T2)
-# ----------------------------------------------------
-rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T1.RData: epigeneticAge_T1T2.R data/preprocessingPheno/phenoT1.csv data/preprocessingPheno/phenoT2.csv
-	Rscript epigeneticAge_T1T2.R \
-	  --outputLogs logs/epigeneticAge_T1T2 \
-	  --betaT1 rData/preprocessingPheno/metrics/betaT1.RData \
-	  --betaT2 rData/preprocessingPheno/metrics/betaT2.RData \
-	  --phenoT1 data/preprocessingPheno/phenoT1.csv \
-	  --phenoT2 data/preprocessingPheno/phenoT2.csv \
-	  --clockDictT1 data/clockFundation/T1_DNAmAgeCalcProject_18159_DataDict.csv \
-	  --clockResT1 data/clockFundation/T1_DNAmAgeCalcProject_18159_Results.csv \
-	  --clockDictT2 data/clockFundation/T2_DNAmAgeCalcProject_18237_DataDict.csv \
-	  --clockResT2 data/clockFundation/T2_DNAmAgeCalcProject_18237_Results.csv \
-	  --minfiPheno data/preprocessingMinfiEwasWater/pheno.csv \
-	  --idRenameFrom SID \
-	  --idRenameTo id \
-	  --sexZeroValue 0 \
-	  --sex0Label Female \
-	  --sex1Label Male \
-	  --phenotypes PCL_SUM,PCL5_B,PCL5_C,PCL5_D,PCL5_E,PTGIX_SUM,DASS_D,DASS_S,DASS_A,SSS8_SUM \
-	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS,BMI \
-	  --factorVars Sex,Ethnicity,TraumaDefinition \
-	  --clockPattern "\\.Methylclock$$|\\.DNAm_Age\\.ClockF$$" \
-	  --prsMap PCL_SUM:PTSD_PRS,PCL5_B:PTSD_PRS,PCL5_C:PTSD_PRS,PCL5_D:PTSD_PRS,PCL5_E:PTSD_PRS,PTGIX_SUM:PTSD_PRS,DASS_D:MDD_PRS,DASS_S:PTSD_PRS,DASS_A:GAD_PRS,SSS8_SUM:MDD_PRS \
-	  --modelOutDir rData/epigeneticAge_T1T2/models \
-	  --dnAmAgeLM_T1Out rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T1.RData \
-	  --dnAmAgeLM_T2Out rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData \
-	  --outputPlots figures/epigeneticAge_T1T2 \
-	  --plotWidth 2000 --plotHeight 1000 --plotDPI 150
-
-# ----------------------------------------------------
 # Clean up outputs
 # ----------------------------------------------------
 clean:
@@ -169,8 +145,7 @@ clean:
 	       data/preprocessingEwastools/* \
 	       data/methylationGLM_T1/* \
 	       data/methylationGLMM_T1T2/* \
-	       data/epigeneticAge_T1T2/* \
-	       results/* figures/* logs/* preliminaryResults/* rData/* reports/*
+=	       results/* figures/* logs/* preliminaryResults/* rData/* reports/*
 
 # ----------------------------------------------------
 # Status Check Target
@@ -182,8 +157,6 @@ status:
 	@test -e data/preprocessingPheno/phenoEWAS.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
 	@test -e data/methylationGLM_T1/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
 	@test -e data/methylationGLMM_T1T2/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
-	@test -e rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T1.RData && echo "? Step 6: epigeneticAge_T1T2 (T1) done" || echo "? Step 6: epigeneticAge_T1T2 (T1) outcome file missing"
-	@test -e rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData && echo "? Step 6: epigeneticAge_T1T2 (T2) done" || echo "? Step 6: epigeneticAge_T1T2 (T2) outcome file missing"
 	@echo "============================"
 
 
