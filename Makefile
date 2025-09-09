@@ -17,13 +17,10 @@ all: \
 	rData/svaEnmix/metrics/ctrlsva.done \
 	data/preprocessingMinfiEwasWater/phenoLC.csv \
 	data/preprocessingPheno/phenoT1.csv \
-	data/preprocessingPheno/phenoT2.csv \
-	data/preprocessingPheno/phenoT1T2.csv \
+	data/preprocessingPheno/phenoT3.csv \
+	data/preprocessingPheno/phenoT1T3.csv \
 	data/methylationGLM_T1/annotatedGLM.csv \
-	data/methylationGLMM_T1T2/annotatedLME.csv \
-	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T1.RData \
-	rData/epigeneticAge_T1T2/models/phenoDNAmAgeLM_T2.RData
-
+	data/methylationGLMM_T1T2/annotatedLME.csv
 # ----------------------------------------------------
 # Group target: first3 (Steps 1to3 only)
 # ----------------------------------------------------
@@ -35,8 +32,8 @@ FIRST3 = \
   data/preprocessingMinfiEwasWater/phenoLC.csv \
   rData/svaEnmix/metrics/ctrlsva.done \
   data/preprocessingPheno/phenoT1.csv \
-  data/preprocessingPheno/phenoT2.csv \
-  data/preprocessingPheno/phenoT1T2.csv
+  data/preprocessingPheno/phenoT3.csv \
+  data/preprocessingPheno/phenoT1T3.csv
 
 f3: $(FIRST3)
 
@@ -48,7 +45,6 @@ rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData
 rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 	Rscript preprocessingMinfiEwasWater.R \
-	  --sepType "\t" \
 	  --SampleID SID \
 	  --pvalThreshold 0.01 \
 	  --mafThreshold 0.1 \
@@ -69,27 +65,27 @@ rData/svaEnmix/metrics/ctrlsva.done: svaEnmix.R data/preprocessingMinfiEwasWater
 # Step 3: Merge Phenotype
 # ----------------------------------------------------
 data/preprocessingPheno/phenoT1.csv \
-data/preprocessingPheno/phenoT2.csv \
-data/preprocessingPheno/phenoT1T2.csv: preprocessingPheno.R data/preprocessingMinfiEwasWater/phenoLC.csv
+data/preprocessingPheno/phenoT3.csv \
+data/preprocessingPheno/phenoT1T3.csv: preprocessingPheno.R data/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript preprocessingPheno.R \
 	  --betaPath rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	  --mPath rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	  --cnPath rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	  --SampleID SID \
 	  --timepoints 1,3 \
-	  --combineTimepoints 1,3 \
+	  --combineTimepoints 1,3
 
 # ----------------------------------------------------
 # Step 4: GLM for T1
 # ----------------------------------------------------
-data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R data/preprocessingPheno/phenoLC.csv
+data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessingPheno/mergeData/phenoBetaT1.RData
 	Rscript methylationGLM_T1.R \
 	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1.RData \
 	  --outputLogs logs/methylationGLM_T1 \
 	  --outputRData rData/methylationGLM_T1/models \
 	  --outputPlots figures/methylationGLM_T1 \
 	  --phenotypes DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore,PTGIX_TotalScore \
-	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS \
+	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells \
 	  --factorVars Sex,Ethnicity,TraumaDefinition \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
@@ -113,14 +109,14 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R data/preprocessingP
 # ----------------------------------------------------
 data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R data/methylationGLM_T1/annotatedGLM.csv
 	Rscript methylationGLMM_T1T2.R \
-	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
+	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T3.RData \
 	  --outputLogs logs/methylationGLMM_T1T2 \
 	  --outputRData rData/methylationGLMM_T1T2/models \
 	  --outputPlots figures/methylationGLM_T1T2 \
 	  --personVar person \
 	  --timeVar Timepoint \
 	  --phenotypes DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore,PTGIX_TotalScore \
-	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS,BMI \
+	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells \
 	  --factorVars Sex,Ethnicity,TraumaDefinition,Timepoint \
 	  --lmeLibs lme4,lmerTest \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
@@ -141,8 +137,8 @@ data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R data/methylat
 # Clean up outputs
 # ----------------------------------------------------
 clean:
-	rm -rf data/preprocessingPheno/* \
-	       data/preprocessingEwastools/* \
+	rm -rf data/preprocessingMinfiEwasWater/phenoLC.csv \
+	       data/preprocessingPheno/* data/svaEnmix/* \
 	       data/methylationGLM_T1/* \
 	       data/methylationGLMM_T1T2/* \
 =	       results/* figures/* logs/* preliminaryResults/* rData/* reports/*
@@ -153,8 +149,7 @@ clean:
 status:
 	@echo "===== Pipeline Status ====="
 	@test -e rData/preprocessingMinfiEwasWater/objects/RGSet.RData && echo "? Step 1: preprocessingMinfiEwasWater done" || echo "? Step 1: preprocessingMinfiEwasWater outcome file missing"
-	@test -e data/preprocessingEwastools/pheno_ewasQC.csv && echo "? Step 2: preprocessingEwastools done" || echo "? Step 2: preprocessingEwastools outcome file missing"
-	@test -e data/preprocessingPheno/phenoEWAS.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
+	@test -e data/preprocessingPheno/phenoT1T3.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
 	@test -e data/methylationGLM_T1/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
 	@test -e data/methylationGLMM_T1T2/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
 	@echo "============================"

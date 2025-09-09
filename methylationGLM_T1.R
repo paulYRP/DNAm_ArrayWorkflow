@@ -24,7 +24,7 @@
 #   --plotDPI 150 \
 #   --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 #   --glmLibs glm2 \
-#   --prsMap Phenotype1:PRS1,Phenotype2:PRS2 \
+#   --prsMap DASS_D:MDD_PRS,DASS_S:PTSD_PRS,DASS_A:GAD_PRS,SSS8_SUM:MDD_PRS \
 #   --summaryPval 0.01 \
 #   --summaryResidualSD \
 #   --saveSignificantCpGs \
@@ -93,11 +93,11 @@ suppressPackageStartupMessages({
 # ----------- Command Line Arguments -----------
 opt <- parse_args(OptionParser(option_list = list(
         make_option("--inputPheno", default = "rData/preprocessingPheno/mergeData/phenoBetaT1.RData", help = "Input RData file with pheno+beta [default: %default]"),
-        make_option("--outputLogs", default = "logs/methylationGLM_T1", help = "Directory to save log file [default: %default]"),
+        make_option("--outputLogs", default = "logs/", help = "Directory to save log file [default: %default]"),
         make_option("--outputRData", default = "rData/methylationGLM_T1/models", help = "Directory to save GLM result objects [default: %default]"),
         make_option("--outputPlots", default = "figures/methylationGLM_T1", help = "Directory for output plots [default: %default]"),
         make_option("--phenotypes", default = "DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore", help = "Comma-separated phenotype scores [default: %default]"),
-        make_option("--covariates", default = "Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS", help = "Comma-separated covariates [default: %default]"),
+        make_option("--covariates", default = "Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells", help = "Comma-separated covariates [default: %default]"),
         make_option("--factorVars", default = "Sex,Ethnicity,TraumaDefinition", help = "Variables to convert to factor [default: %default]"),
         make_option("--cpgPrefix", default = "cg", help = "Regex pattern to match CpG columns cg|ch [default: %default]"),
         make_option("--cpgLimit", default = NA, type = "integer", help = "Limit number of CpGs to test [default: all]"),
@@ -227,15 +227,26 @@ cat("Summary statistics:\n")
 print(summary(phenoBT1[, c(phenotypes, covariates)]))
 
 for (var in phenotypes) {
-        p <- ggplot(phenoBT1, aes_string(x = var)) +
-                geom_histogram(bins = 30, fill = "steelblue", color = "white") +
-                labs(title = paste("Distribution of", var), 
-                     x = var, y = "Frequency") +
-                theme_minimal()
+  
+        if (is.numeric(phenoBT1[[var]])) {
+          p <- ggplot(phenoBT1, aes_string(x = var)) +
+            geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+            labs(title = paste("Distribution of", var), 
+                 x = var, y = "Frequency") +
+            theme_minimal()
+          
+        } else {
+          p <- ggplot(phenoBT1, aes_string(x = var)) +
+            geom_bar(fill = "steelblue") +
+            labs(title = paste("Distribution of", var), x = var, y = "Count") +
+            theme_minimal()
+        }
+        
         tiff(filename = file.path(opt$outputPlots, paste0("hist_", var, ".tiff")),
              width = opt$plotWidth,
              height = opt$plotHeight,
              res = opt$plotDPI, type = "cairo")
+        
         print(p)
         dev.off()
 }

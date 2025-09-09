@@ -87,13 +87,13 @@ suppressPackageStartupMessages({
 # ----------- Command Line Arguments -----------
 opt <- parse_args(OptionParser(option_list = list(
         make_option("--inputPheno", default = "rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData", help = "Input RData file with longitudinal pheno + beta values [default: %default]"),
-        make_option("--outputLogs", default = "logs/methylationGLMM_T1T2", help = "Directory to save log file [default: %default]"),
+        make_option("--outputLogs", default = "logs/", help = "Directory to save log file [default: %default]"),
         make_option("--outputRData", default = "rData/methylationGLMM_T1T2/models", help = "Directory to save LME model outputs [default: %default]"),
         make_option("--outputPlots", default = "figures/methylationGLMM_T1T2", help = "Directory to save diagnostic plots [default: %default]"),
         make_option("--personVar", default = "person", help = "Column name identifying unique individuals [default: %default]"),
         make_option("--timeVar", default = "Timepoint", help = "Column name indicating timepoints (e.g., T1, T2) [default: %default]"),
         make_option("--phenotypes", default = "DASS_Depression,DASS_Anxiety,DASS_Stress,PCL5_TotalScore,MHCSF_TotalScore,BRS_TotalScore", help = "Comma-separated phenotype scores [default: %default]"),
-        make_option("--covariates", default = "Sex,Age,Ethnicity,TraumaDefinition,Leukocytes.EWAS,Epithelial.cells.EWAS", help = "Comma-separated covariates [default: %default]"),
+        make_option("--covariates", default = "Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells", help = "Comma-separated covariates [default: %default]"),
         make_option("--factorVars", default = "Sex,Ethnicity,TraumaDefinition,Timepoint", help = "Variables to convert to factor [default: %default]"),
         make_option("--lmeLibs", default = "lme4,lmerTest", help = "Comma-separated list of libraries for LME models [default: %default]"),
         make_option("--prsMap", default = NULL, help = "Optional: comma-separated mapping of phenotype to PRS covariates (e.g., phenotype:PRS)"),
@@ -165,7 +165,7 @@ cat("Person ID variable: ", opt$personVar, "\n")
 cat("Timepoint variable: ", opt$timeVar, "\n")
 cat("Phenotypes: ", opt$phenotypes, "\n")
 cat("Covariates: ", opt$covariates, "\n")
-cat("PRS mapping: ", ifelse(is.null(opt$prsMap), "None", opt$prsMap), "\n")
+cat("PRS mapping: ", if (is.null(opt$prsMap)) "None" else paste(unlist(opt$prsMap), collapse = ", "), "\n")
 cat("Factor variables: ", opt$factorVars, "\n")
 cat("LME libraries: ", opt$lmeLibs, "\n")
 cat("Library path: ", ifelse(is.null(opt$libPath), "Default (R system)", opt$libPath), "\n")
