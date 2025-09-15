@@ -118,6 +118,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--tiffRes", type = "integer", default = 150),
         make_option("--qcCutoff", type = "double", default = 10.5),
         make_option("--detPtype", default = "m+u", help = "Detection P-value type"),
+        make_option("--detPThreshold", type = "double", default = 0.05, help = "Threshold for mean detection p-value to remove bad samples [default %default]"),
         make_option("--funnormSeed", type = "integer", default = 123, help = "Seed for normalization"),
         make_option("--normMethods", default = "adjustedfunnorm", help = "Normalization methods separated by ; (e.g., funnorm;swan)"),
         make_option("--sexColumn", type = "character", default = "Sex", help = "Column in phenotype (pData) with sample sex (e.g., 'Sex', coded F/M)"),
@@ -163,6 +164,7 @@ cat("Base RData folder:        ", opt$baseDataFolder, "\n")
 cat("TIFF size (w x h @ dpi):  ", opt$tiffWidth, " x ", opt$tiffHeight, " @ ", opt$tiffRes, "\n")
 cat("QC cutoff (median):       ", opt$qcCutoff, "\n")
 cat("Detection P-value type:   ", opt$detPtype, "\n\n")
+cat("Detection p-value threshold:", opt$detPThreshold, "\n")
 cat("Normalization methods:    ", paste(opt$normMethodList, collapse = ", "), "\n")
 cat("Funnorm seed:             ", opt$funnormSeed, "\n")
 cat("Sex column:               ", opt$sexColumn, "\n")
@@ -395,6 +397,29 @@ dev.off()
 cat("Detection plot p-values saved to: ", detPlotPath, "\n")
 cat("=======================================================================\n")
 
+# ----------- Remove samples based on detection P-values -----------
+cat("Calculate the mean detection p-values across all samples...\n")
+meanDetP <- colMeans(detP)
+
+# === Identify Failed Samples ===
+failedSamples <- names(meanDetP[meanDetP > opt$detPThreshold])
+nFailed <- length(failedSamples)
+nBefore <- ncol(RGSet)
+
+cat("Number of failed samples:", nFailed, "\n")
+if (nFailed > 0) {
+  cat("Failed sample IDs:\n")
+  cat(paste(failedSamples, collapse = ", "), "\n")
+}
+
+# === Remove Failed Samples from RGSet ===
+RGSet <- RGSet[, !(colnames(RGSet) %in% failedSamples)]
+nAfter <- ncol(RGSet)
+
+cat("Samples before filtering:", nBefore, "\n")
+cat("Samples after filtering:", nAfter, "\n")
+cat("=======================================================================\n")
+
 # ----------- Density Plot of Beta Values from MSet -----------
 cat("Generating density plot of Beta values...\n")
 
@@ -476,6 +501,12 @@ targets$PredSex <- pSex$predictedSex
 # Convert F = 0 and M = 1 in the column predSex
 targets$PredSex <- ifelse(targets$PredSex == "F", 0, 1)
 
+# === Remove Failed Samples from targets ===
+targets <- targets[!(targets[[opt$SampleID]] %in% failedSamples), ]
+
+# Add PredSex to pData  
+pData(RGSet)$PredSex <- targets$PredSex
+
 cat("Mistmaches found")
 print(targets[targets$Sex != targets$PredSex, 1:3])
 cat("=======================================================================\n")
@@ -532,19 +563,19 @@ tiff(filename = rawNormlPath,
      
 par(mfrow=c(1,2))
 densityPlot(RGSet, 
-            sampGroups=targets$Sex,
+            sampGroups=targets[[opt$sexColumn]],
             main="Raw", 
             legend=FALSE)
 legend("top", 
-       legend = levels(factor(targets$Sex)), 
+       legend = levels(factor(targets[[opt$sexColumn]])), 
        text.col=brewer.pal(8,"Dark2"))
 
 densityPlot(getBeta(MSetF), 
-            sampGroups=targets$Sex,
+            sampGroups=targets[[opt$sexColumn]],
             main="Normalized", 
             legend=FALSE)
 legend("top", 
-       legend = levels(factor(targets$Sex)), 
+       legend = levels(factor(targets[[opt$sexColumn]])), 
        text.col=brewer.pal(8,"Dark2"))
 dev.off()
 
@@ -650,6 +681,7 @@ cat("=======================================================================\n")
 # ----- Examine higher dimensions to look at other sources of variation -----
 
 groupFactor <- factor(targets[[opt$plotGroupVar]])
+groupSex <- factor(targets[[opt$sexColumn]])
 
 mdsPath <- file.path("figures", 
                           opt$scriptLabel, 
@@ -673,8 +705,8 @@ legend("right", legend=levels(groupFactor),
 plotMDS(getM(MSetF_Flt_Rxy_Ds_Rc), 
         main="Sex",
         top=1000, gene.selection="common", 
-        col=pal[groupFactor], dim=c(2,3))
-legend("topright", legend=levels(groupFactor), 
+        col=pal[groupSex], dim=c(2,3))
+legend("topright", legend=levels(groupSex), 
        text.col = brewer.pal(8,"Dark2"),
        cex=0.7, bg="white")
 
