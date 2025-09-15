@@ -418,6 +418,11 @@ nAfter <- ncol(RGSet)
 
 cat("Samples before filtering:", nBefore, "\n")
 cat("Samples after filtering:", nAfter, "\n")
+
+# ----------- Save RGSet -----------
+RGSetPath <- file.path(objectDir, "RGSet.RData")
+save(RGSet, file = RGSetPath)
+cat("RGSet saved after removing the failed samples to: ", RGSetPath, "\n")
 cat("=======================================================================\n")
 
 # ----------- Density Plot of Beta Values from MSet -----------
