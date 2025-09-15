@@ -15,6 +15,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
   - Objects (RGSet, MSet ...)
   - CSV file with cell estimation
   - Surrogate variable report
+  - CSV file and ZIP file compatible with [ClockFundation](https://dnamage.clockfoundation.org/)
 
 ## Articles:
 - A Novel Longitudinal Epigenome-Wide Study of Posttraumatic 
