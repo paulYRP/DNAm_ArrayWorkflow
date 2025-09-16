@@ -18,15 +18,18 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
   - CSV file and ZIP file compatible with [ClockFundation](https://dnamage.clockfoundation.org/)
 - `make -j1 f4` added to execute only the first 4 steps. Output:
   - annotatedGLM.csv
-- `make -j1 f3lme` added to execute only the first 3 + LMER. Output:
-  - annotatedLME.csv
-
   ```bash
   | IlmnID             | DASS_DepressionP.Value | DASS_AnxietyP.Value | DASS_StressP.Value | PCL5_TotalScoreP.Value | MHCSF_TotalScoreP.Value | BRS_TotalScoreP.Value | PTGIX_TotalScoreP.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
   |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
   | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
+  ``` 
+- `make -j1 f3lme` added to execute only the first 3 + LMER. Output:
+  - annotatedLME.csv
+  ```bash
+  | IlmnID             | DASS_Depression_Timepoint3_P.Value | DASS_Anxiety_Timepoint3_P.Value | DASS_Stress_Timepoint3_P.Value | PCL5_TotalScore_Timepoint3_P.Value | MHCSF_TotalScore_Timepoint3_P.Value | BRS_TotalScore_Timepoint3_P.Value | PTGIX_TotalScore_Timepoint3_P.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
+  |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
+  | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
   ```
-
 ## Articles/Tutorial:
 - [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
 - [**DNA Methylation Tutorial**](https://n10962646.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
