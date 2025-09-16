@@ -159,7 +159,7 @@ if (!is.na(opt$nSamples) && opt$nSamples < nrow(targets)) {
 cat("Phenotype file loaded with", 
     nrow(targets), "samples and", ncol(targets), "columns.\n")
 cat("Preview of targets:\n")
-print(head(targets[, 1:5])) 
+print(head(targets[, 1:6])) 
 cat("=======================================================================\n")
 
 # ----------- Load IDAT Files into RGSet -----------
@@ -180,7 +180,13 @@ cat("Surrogate variables matrix (first few rows):\n")
 print(head(sva))
 
 # ----------- Plot SVA Colored by SentrixID -----------
-sentrixID <- as.factor(pData(RGSet)[[opt$SentrixIDColumn]])
+sentrixID <- pData(RGSet)[[opt$SentrixIDColumn]]
+
+cat("Raw SentrixID preview:\n")
+print(head(sentrixID))
+
+sentrixID <- as.character(sentrixID)
+sentrixID <- as.factor(sentrixID)
 
 # Create TIFF output
 svaSentrixPath <- file.path("figures", 
@@ -232,6 +238,27 @@ cat("=======================================================================\n")
 
 # ----------- Linear Models for Surrogate Variables (ANOVA) -----------
 K <- ncol(sva)
+cat("Number of surrogate variables (K):", K, "\n")
+
+# Print class and levels of SentrixID
+cat("SentrixID class:", class(sentrixID), "\n")
+cat("SentrixID unique levels:", length(unique(sentrixID)), "\n")
+print(table(sentrixID))
+
+# Print class and levels of SentrixPosition
+cat("SentrixPosition class:", class(sentrixPos), "\n")
+cat("SentrixPosition unique levels:", length(unique(sentrixPos)), "\n")
+print(table(sentrixPos))
+
+# Print example row of SVA matrix
+cat("First row of SVA matrix:\n")
+print(sva[1, ])
+
+# Confirm if sample names align
+cat("Sample names in SVA matrix:", 
+    paste(rownames(sva)[1:5], collapse = ", "), "\n")
+cat("Sample names in pData(RGSet):", 
+    paste(rownames(pData(RGSet))[1:5], collapse = ", "), "\n")
 
 # Fit linear models for each surrogate variable
 lmsvaFull <- lapply(1:K, function(i) 

@@ -70,6 +70,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--outputPheno", default = "data/preprocessingPheno/", help = "Path to save final phenotype CSVs", metavar = "DIR"),
         make_option("--outputRData", default = "rData/preprocessingPheno/metrics", help = "Directory to save processed RData objects metrics", metavar = "DIR"),
         make_option("--outputRDataMerge", default = "rData/preprocessingPheno/mergeData", help = "Directory to save processed RData objects mergedata", metavar = "DIR"),
+        make_option("--sexColumn", type = "character", default = "Sex", help = "Column in sample data with sample sex (e.g., 'Sex', coded F/M)"),
         make_option("--outputLogs", default = "logs/", help = "Directory for all log output [default: %default]", metavar = "DIR"),
         make_option("--scriptLabel", default = "preprocessingPheno", help = "Label for log file naming [default: %default]", metavar = "STR")
         
@@ -101,6 +102,7 @@ cat("CN path:                  ", opt$cnPath, "\n\n")
 cat("Identifier column:        ", opt$SampleID, "\n")
 cat("Timepoints (if present):  ", opt$timepoints, "\n")
 cat("Combine timepoints:       ", opt$combineTimepoints, "\n\n")
+cat("Sex column:               ", opt$sexColumn, "\n")
 
 cat("Output phenotype dir:     ", opt$outputPheno, "\n")
 cat("RData metrics dir:        ", opt$outputRData, "\n")
@@ -249,8 +251,6 @@ cat("Merged data saved to:", opt$outputRDataMerge, "\n")
 cat("=======================================================================\n")
 # ----------- Preprocessing Betas for Horvath Calculator -----------
 
-rownames(beta) <- str_replace(rownames(beta), "_.*$", "")
-
 betaCSV <- as.data.frame(beta)
 betaCSV <- tibble::rownames_to_column(betaCSV, var = "ProbeID")
 
@@ -273,11 +273,11 @@ pheno <- pheno %>%
   rename(id = opt$SampleID)
 
 # Recode Sex only if values are not already "Male"/"Female"
-uniqueSex <- unique(pheno$Sex)
+uniqueSex <- unique(pheno[[opt$sexColumn]])
 
 if (!all(uniqueSex %in% c("Male", "Female"))) {
   cat("Re-encoding Sex: 0 = Female, 1 = Male\n")
-  pheno$Sex <- ifelse(pheno$Sex == 0, "Female", "Male")
+  pheno[[opt$sexColumn]] <- ifelse(pheno[[opt$sexColumn]] == 0, "Female", "Male")
 } else {
   cat("Sex column already contains 'Male' and 'Female'. Skipping recoding.\n")
 }
