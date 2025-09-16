@@ -197,6 +197,27 @@ cat("Loading input phenotype + beta file...\n")
 inpt <- load(opt$inputPheno)
 phenoBT1T2 <- get(inpt)
 
+# ----------- Check and Create person Column if Missing -----------
+if (!(opt$personVar %in% colnames(phenoBT1T2))) {
+  cat(paste0("Column '", 
+             opt$personVar, "' not found. Creating it from 'SID'...\n"))
+  
+  phenoBT1T2[[opt$personVar]] <- as.numeric(factor(gsub("[AB]$", "", 
+                                                        phenoBT1T2$SID)))
+  
+  cat("Example mapping of SID to person ID:\n")
+  print(head(phenoBT1T2[order(phenoBT1T2[[opt$personVar]], 
+                              phenoBT1T2$SID), 
+                        c("SID", opt$personVar)], 20
+  ))
+  
+  cat("Count of records per person ID:\n")
+  print(table(phenoBT1T2[[opt$personVar]]))
+} else {
+  cat(paste0("Column '", 
+             opt$personVar, "' already exists. Skipping creation.\n"))
+}
+
 cat("Checking structure of merged longitudinal dataset...\n")
 print(table(table(phenoBT1T2[[opt$personVar]])))
 print(table(phenoBT1T2[[opt$timeVar]]))
@@ -216,27 +237,6 @@ phenoBT1T2 %>%
         ))) %>%
         print(width = Inf)
 cat("=======================================================================\n")
-
-# ----------- Check and Create person Column if Missing -----------
-if (!(opt$personVar %in% colnames(phenoBT1T2))) {
-        cat(paste0("Column '", 
-                   opt$personVar, "' not found. Creating it from 'SID'...\n"))
-        
-        phenoBT1T2[[opt$personVar]] <- as.numeric(factor(gsub("[AB]$", "", 
-                                                              phenoBT1T2$SID)))
-        
-        cat("Example mapping of SID to person ID:\n")
-        print(head(phenoBT1T2[order(phenoBT1T2[[opt$personVar]], 
-                                    phenoBT1T2$SID), 
-                              c("SID", opt$personVar)], 20
-        ))
-        
-        cat("Count of records per person ID:\n")
-        print(table(phenoBT1T2[[opt$personVar]]))
-} else {
-        cat(paste0("Column '", 
-                   opt$personVar, "' already exists. Skipping creation.\n"))
-}
 
 # ----------- Run LME Function -----------
 lme <- function(
