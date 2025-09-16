@@ -17,8 +17,9 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
   - Surrogate variable report
   - CSV file and ZIP file compatible with [ClockFundation](https://dnamage.clockfoundation.org/)
 
-## Articles:
-- A Novel Longitudinal Epigenome-Wide Study of Posttraumatic 
+## Articles/Tutorial:
+- [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
+- [**DNA Methylation Tutorial**](https://n10962646.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
 
 --------------
 ## Hardware Requirements
