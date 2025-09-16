@@ -105,6 +105,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--plotWidth", default = 2000, type = "integer", help = "Plot width in pixels [default: %default]"),
         make_option("--plotHeight", default = 1000, type = "integer", help = "Plot height in pixels [default: %default]"),
         make_option("--plotDPI", default = 150, type = "integer", help = "Plot DPI (resolution) [default: %default]"),
+        make_option("--interactionTerm", default = NULL, help = "Optional interaction with phenotype [default: %default]"),
         make_option("--libPath", default = NULL, help = "Default library path used in clusterEvalQ. Aqua: ~/R/x86_64-pc-linux-gnu-library/4.4"),
         make_option("--glmLibs", default = "glm2", help = "Comma-separated list of libraries to load in each worker node"),
         make_option("--prsMap", default = NULL, help = "Optional: comma-separated mapping of phenotype to PRS covariates (e.g., phenotype:PRS)"),
@@ -176,6 +177,7 @@ cat("Factor variables: ", opt$factorVars, "\n")
 cat("CpG column prefix: ", opt$cpgPrefix, "\n")
 cat("CpG limit: ", ifelse(is.na(opt$cpgLimit), "All", opt$cpgLimit), "\n")
 cat("Number of cores: ", opt$nCores, "\n")
+cat("Interaction term: ", opt$interactionTerm, "\n")
 cat("Library path: ", opt$libPath, "\n")
 cat("GLM libraries: ", opt$glmLibs, "\n")
 cat("PRS mapping: ", ifelse(is.null(opt$prsMap), "None", paste(opt$prsMap, collapse = ", ")), "\n")
@@ -297,15 +299,22 @@ glm <- function(
                 cpgLimit = opt$cpgLimit,
                 nCore = opt$nCores,
                 libPath = opt$libPath,
-                glmLibList = opt$glmLibList
+                glmLibList = opt$glmLibList,
+                interactionTerm = NULL 
+                
 ) {
         if (!phenoScore %in% colnames(merge)) {
                 stop(paste("Phenotype", phenoScore, "not found in the dataset"))
         }
-        
-        formula <- paste("~", phenoScore, "+", 
-                         paste(covariates, collapse = " + "))
-        
+  
+        if (!is.null(interactionTerm) && interactionTerm != "" && interactionTerm %in% colnames(merge)) {
+          interactionPart <- paste(phenoScore, "*", interactionTerm)
+          fixedTerms <- setdiff(c(covariates), c(phenoScore, interactionTerm))
+          fullFormula <- paste("~", paste(c(interactionPart, fixedTerms), collapse = " + "))
+        } else {
+          fullFormula <- paste("~", paste(c(phenoScore, covariates), collapse = " + "))
+        }
+  
         cpgCol <- grep(paste0("^", cpgPrefix), colnames(merge), value = TRUE)
         if (!is.na(cpgLimit)) {
                 cpgCol <- head(cpgCol, as.numeric(cpgLimit))
@@ -313,11 +322,11 @@ glm <- function(
         cl <- makeCluster(nCore)
         clusterExport(
                 cl,
-                varlist = c("phenoScore", 
+                varlist = c("phenoScore", "interactionTerm",
                             "covariates", 
                             "factorVars", 
                             "libPath", 
-                            "glmLibList"),
+                            "glmLibList", "fullFormula"),
                 envir = environment()
         )
         
@@ -334,7 +343,7 @@ glm <- function(
         
         fit <- function(cpg) {
                 tryCatch({
-                        model <- merge[, c(phenoScore, covariates, cpg)]
+                        model <- merge[, c(phenoScore, interactionTerm, covariates, cpg)]
                         colnames(model)[ncol(model)] <- "beta"
                         
                         for (var in factorVars) {
@@ -344,7 +353,7 @@ glm <- function(
                         }
                         
                         fit <- glm2(
-                                beta ~ .,
+                                formula = as.formula(paste("beta", fullFormula)),
                                 data = model,
                                 family = gaussian(),
                                 na.action = na.exclude
@@ -383,7 +392,12 @@ for (pheno in opt$phenotypeList) {
         prsVar <- if (pheno %in% names(opt$prsMapList)) opt$prsMapList[[pheno]] else NULL
         allCovariates <- if (!is.null(prsVar)) c(opt$covariateList, prsVar) else opt$covariateList
         
-        modelFormula <- paste("~", pheno, "+", paste(allCovariates, collapse = " + "))
+        # Interaction
+        modelFormula <- if (!is.null(opt$interactionTerm) && opt$interactionTerm != "") {
+          paste("~", paste(c(paste0(pheno, "*", opt$interactionTerm), allCovariates), collapse = " + "))
+        } else {
+          paste("~", paste(c(pheno, allCovariates), collapse = " + "))
+        }
         cat("Formula:", modelFormula, "\n")
         
         fitResult <- glm(
@@ -395,7 +409,8 @@ for (pheno in opt$phenotypeList) {
                 cpgLimit = opt$cpgLimit,
                 nCore = opt$nCores,
                 libPath = opt$libPath,
-                glmLibList = opt$glmLibList
+                glmLibList = opt$glmLibList,
+                interactionTerm = opt$interactionTerm  
         )
         
         save(fitResult, file = outputFile)
