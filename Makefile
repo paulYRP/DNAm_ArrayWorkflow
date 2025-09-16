@@ -22,7 +22,7 @@ all: \
 	data/methylationGLM_T1/annotatedGLM.csv \
 	data/methylationGLMM_T1T2/annotatedLME.csv
 # ----------------------------------------------------
-# Group target: first3 (Steps 1to3 only)
+# Group target: first3 (Steps 1 to 3 only)
 # ----------------------------------------------------
 .PHONY: f3
 FIRST3 = \
@@ -143,7 +143,7 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessing
 # ----------------------------------------------------
 # Step 5: LME for T1 vs T2 (Longitudinal Analysis)
 # ----------------------------------------------------
-data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R data/methylationGLM_T1/annotatedGLM.csv
+data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
 	Rscript methylationGLMM_T1T2.R \
 	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
 	  --outputLogs logs/ \
