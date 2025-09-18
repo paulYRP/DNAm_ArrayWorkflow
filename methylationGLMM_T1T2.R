@@ -110,7 +110,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--significantInteractionDir", default = "preliminaryResults/cpgs/methylationGLMM_T1T2", help = "Directory to save significant interaction CpGs [default: %default]"),
         make_option("--significantInteractionPval", type = "double", default = 0.05, help = "P-value threshold for significant interactions [default: %default]"),
         make_option("--saveTxtSummaries", action = "store_true", default = TRUE, help = "Whether to save GLM summaries as TXT files [default: %default]"),
-        make_option("--chunkSize", type="integer", default=1000, help="Number of CpGs to process per worker [default %default]"),
+        make_option("--chunkSize", type="integer", default=10000, help="Number of CpGs to process per worker [default %default]"),
         make_option("--summaryTxtDir", default = "preliminaryResults/summary/methylationGLMM_T1T2/lmer", help = "Output directory to save summary text files [default: %default]", metavar = "DIR"),
         make_option("--fdrThreshold", type = "double", default = 0.05, help = "Padj-value threshold to determine significance [default: %default]"),
         make_option("--padjmethod", default = "BH", help = "Method for multiple testing correction [default: %default]"),
@@ -381,6 +381,12 @@ cpgsLME <- function(
                 
 ) {
         cat("Extracting LME interaction effects for:", phenotype, "\n")
+  
+        cpgNames <- names(fitList)
+        if (is.null(chunkSize)) {
+          chunkSize <- max(1000, floor(length(cpgNames) / (nCore * 4)))
+        }
+        cat("Total CpGs:", length(cpgNames), "| Using chunkSize:", chunkSize, "\n")
         
         splitIntoChunks <- function(x, size) {
           split(x, ceiling(seq_along(x) / size))
@@ -392,7 +398,7 @@ cpgsLME <- function(
         cl <- makeCluster(nCore)
         clusterExport(
                 cl,
-                varlist = c("fitList", "interactionPrefix", "pValue", "interactionTerm",
+                varlist = c("fitList", "pValue", "interactionTerm",
                             "phenotype", "libPath", "lmeLibs"),
                 envir = environment()
         )
@@ -408,8 +414,9 @@ cpgsLME <- function(
                 })
         })
         
-        results <- parLapply(cl, cpgChunks, function(chunk) {
-          outList <- list()
+        results <- parLapplyLB(cl, cpgChunks, function(chunk) {
+          outList <- vector("list", length(chunk))
+          idx <- 1
           for (cpg in chunk) {
             modelOutput <- fitList[[cpg]]
             if (is.null(modelOutput) || is.null(modelOutput$coef)) next
@@ -420,21 +427,30 @@ cpgsLME <- function(
             
             if (length(matchedTerms) == 0) next
             
-            tmp <- do.call(rbind, lapply(matchedTerms, function(term) {
-              coefRow <- coefTable[term, ]
-              data.frame(
-                CpG = cpg,
-                Interaction.Term = term,
-                Estimate = coefRow["Estimate"],
-                Std.Error = coefRow["Std. Error"],
-                t.value = coefRow["t value"],
-                P.value = coefRow["Pr(>|t|)"],
-                row.names = NULL
-              )
-            }))
-            outList[[length(outList) + 1]] <- tmp
+            tmp <- tryCatch({
+              do.call(rbind, lapply(matchedTerms, function(term) {
+                coefRow <- coefTable[term, ]
+                data.frame(
+                  CpG = cpg,
+                  Interaction.Term = term,
+                  Estimate = coefRow["Estimate"],
+                  Std.Error = coefRow["Std. Error"],
+                  t.value = coefRow["t value"],
+                  P.value = coefRow["Pr(>|t|)"],
+                  row.names = NULL
+                )
+              }))})
+            if (!is.null(tmp)) {
+              outList[[idx]] <- tmp
+              idx <- idx + 1 
+              }
           }
-          do.call(rbind, outList)
+          if (idx > 1) {
+            return(data.table::rbindlist(outList[1:(idx-1)], 
+                                         use.names = TRUE, fill = TRUE))
+          } else {
+            return(NULL)
+          }
         })
         
         stopCluster(cl)

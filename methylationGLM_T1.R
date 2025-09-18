@@ -115,7 +115,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--significantCpGDir", default = "preliminaryResults/cpgs/methylationGLM_T1", help = "Directory to store significant CpG tables [default: %default]"),
         make_option("--significantCpGPval", type = "double", default = 0.05, help = "P-value threshold to determine significance [default: %default]"),
         make_option("--saveTxtSummaries", action = "store_true", default = TRUE, help = "Whether to save GLM summaries as TXT files [default: %default]"),
-        make_option("--chunkSize", type="integer", default=1000, help="Number of CpGs to process per worker [default %default]"),
+        make_option("--chunkSize", type="integer", default=10000, help="Number of CpGs to process per worker [default %default]"),
         make_option("--summaryTxtDir", default = "preliminaryResults/summary/methylationGLM_T1/glm", help = "Output directory to save summary text files [default: %default]", metavar = "DIR"),
         make_option("--fdrThreshold", type = "double", default = 0.05, help = "FDR threshold for significant CpGs [default: %default]"),
         make_option("--padjmethod", default = "BH", help = "Method for multiple testing correction [default: %default]"),
@@ -438,6 +438,12 @@ cpgsGLM <- function(
 ) {
         cat("Starting extraction for variable:", variable, "\n")
   
+        cpgNames <- names(fitList)
+        if (is.null(chunkSize)) {
+          chunkSize <- max(1000, floor(length(cpgNames) / (nCores  * 4)))
+        }
+        cat("Total CpGs:", length(cpgNames), "| Using chunkSize:", chunkSize, "\n")
+  
         splitIntoChunks <- function(x, size) {
           split(x, ceiling(seq_along(x) / size))
         }
@@ -470,8 +476,9 @@ cpgsGLM <- function(
         })
         
         # Each worker handles a whole chunk
-        chunkResults <- parLapply(cl, cpgChunks, function(chunk) {
-          outList <- list()
+        chunkResults <- parLapplyLB(cl, cpgChunks, function(chunk) {
+          outList <- vector("list", length(chunk))
+          idx <- 1
           for (cpg in chunk) {
             modelObj <- fitList[[cpg]]
             if (is.null(modelObj)) next
@@ -482,7 +489,8 @@ cpgsGLM <- function(
                                 variable, ".*:", interactionTerm)
               matchedRows <- grep(pattern, rownames(coefTable), value = TRUE)
             } else {
-              matchedRows <- variable   
+              matchedRows <- grep(paste0("^", variable), 
+                                  rownames(coefTable), value = TRUE)
             }
             
             if (length(matchedRows) == 0) next
@@ -496,14 +504,22 @@ cpgsGLM <- function(
               tmp$ResidualSD <- sd(modelObj$residuals, na.rm = TRUE)
             }
             
-            outList[[length(outList) + 1]] <- tmp
+            if (!is.null(tmp)) {
+              outList[[idx]] <- tmp
+              idx <- idx + 1 
+            }
           }
-          do.call(rbind, outList)
+          if (idx > 1) {
+            return(data.table::rbindlist(outList[1:(idx-1)], 
+                                         use.names = TRUE, fill = TRUE))
+          } else {
+            return(NULL)
+          }
         })
         
         stopCluster(cl)
         
-        summary <- do.call(rbind, chunkResults)
+        summary <- data.table::rbindlist(chunkResults, use.names = TRUE, fill = TRUE)
         
         if (is.null(summary)) {
                 warning("No CpG-level results extracted for:", variable)
