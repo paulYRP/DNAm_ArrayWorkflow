@@ -110,6 +110,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--significantInteractionDir", default = "preliminaryResults/cpgs/methylationGLMM_T1T2", help = "Directory to save significant interaction CpGs [default: %default]"),
         make_option("--significantInteractionPval", type = "double", default = 0.05, help = "P-value threshold for significant interactions [default: %default]"),
         make_option("--saveTxtSummaries", action = "store_true", default = TRUE, help = "Whether to save GLM summaries as TXT files [default: %default]"),
+        make_option("--chunkSize", type="integer", default=1000, help="Number of CpGs to process per worker [default %default]"),
         make_option("--summaryTxtDir", default = "preliminaryResults/summary/methylationGLMM_T1T2/lmer", help = "Output directory to save summary text files [default: %default]", metavar = "DIR"),
         make_option("--fdrThreshold", type = "double", default = 0.05, help = "Padj-value threshold to determine significance [default: %default]"),
         make_option("--padjmethod", default = "BH", help = "Method for multiple testing correction [default: %default]"),
@@ -319,7 +320,6 @@ lme <- function(
         stopCluster(cl)
         return(fitList)
 }
-cat("=======================================================================\n")
 
 # ----------- Run LMEs for All Phenotypes -----------
 cat("Running LMEs for all phenotypes...\n")
@@ -376,16 +376,23 @@ cpgsLME <- function(
                 pValue = opt$summaryPval,
                 nCore = opt$nCores,
                 libPath = opt$libPath,
-                lmeLibs = opt$lmeLibList
+                lmeLibs = opt$lmeLibList,
+                chunkSize = opt$chunkSize 
+                
 ) {
         cat("Extracting LME interaction effects for:", phenotype, "\n")
         
-        interactionPrefix <- paste0(phenotype, ":", interactionTerm)
+        splitIntoChunks <- function(x, size) {
+          split(x, ceiling(seq_along(x) / size))
+        }
         
+        cpgNames <- names(fitList)                      
+        cpgChunks <- splitIntoChunks(cpgNames, chunkSize) 
+  
         cl <- makeCluster(nCore)
         clusterExport(
                 cl,
-                varlist = c("fitList", "interactionPrefix", "pValue", 
+                varlist = c("fitList", "interactionPrefix", "pValue", "interactionTerm",
                             "phenotype", "libPath", "lmeLibs"),
                 envir = environment()
         )
@@ -401,29 +408,33 @@ cpgsLME <- function(
                 })
         })
         
-        results <- parLapply(cl, names(fitList), function(cpg) {
-                modelOutput <- fitList[[cpg]]
-                if (is.null(modelOutput) || is.null(modelOutput$coef)) return(NULL)
-                
-                coefTable <- modelOutput$coef
-                rownames(coefTable) <- make.names(rownames(coefTable))
-                pattern <- paste0("^", make.names(interactionPrefix))
-                
-                matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
-                if (length(matchedTerms) == 0) return(NULL)
-                
-                do.call(rbind, lapply(matchedTerms, function(term) {
-                        coefRow <- coefTable[term, ]
-                        data.frame(
-                                CpG = cpg,
-                                Interaction.Term = term,
-                                Estimate = coefRow["Estimate"],
-                                Std.Error = coefRow["Std. Error"],
-                                t.value = coefRow["t value"],
-                                P.value = coefRow["Pr(>|t|)"],
-                                row.names = NULL
-                        )
-                }))
+        results <- parLapply(cl, cpgChunks, function(chunk) {
+          outList <- list()
+          for (cpg in chunk) {
+            modelOutput <- fitList[[cpg]]
+            if (is.null(modelOutput) || is.null(modelOutput$coef)) next
+            
+            coefTable <- modelOutput$coef
+            pattern <- paste0("^", phenotype, ".*:", interactionTerm)
+            matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
+            
+            if (length(matchedTerms) == 0) next
+            
+            tmp <- do.call(rbind, lapply(matchedTerms, function(term) {
+              coefRow <- coefTable[term, ]
+              data.frame(
+                CpG = cpg,
+                Interaction.Term = term,
+                Estimate = coefRow["Estimate"],
+                Std.Error = coefRow["Std. Error"],
+                t.value = coefRow["t value"],
+                P.value = coefRow["Pr(>|t|)"],
+                row.names = NULL
+              )
+            }))
+            outList[[length(outList) + 1]] <- tmp
+          }
+          do.call(rbind, outList)
         })
         
         stopCluster(cl)
@@ -438,7 +449,6 @@ cpgsLME <- function(
         cat("Finished extracting interaction for:", phenotype, "\n")
         return(summary)
 }
-cat("=======================================================================\n")
 
 # ----------- Run and Save LME Summaries -----------
 cat("Running LME summary extraction for all phenotypes...\n")

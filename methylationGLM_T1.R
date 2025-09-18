@@ -115,6 +115,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--significantCpGDir", default = "preliminaryResults/cpgs/methylationGLM_T1", help = "Directory to store significant CpG tables [default: %default]"),
         make_option("--significantCpGPval", type = "double", default = 0.05, help = "P-value threshold to determine significance [default: %default]"),
         make_option("--saveTxtSummaries", action = "store_true", default = TRUE, help = "Whether to save GLM summaries as TXT files [default: %default]"),
+        make_option("--chunkSize", type="integer", default=1000, help="Number of CpGs to process per worker [default %default]"),
         make_option("--summaryTxtDir", default = "preliminaryResults/summary/methylationGLM_T1/glm", help = "Output directory to save summary text files [default: %default]", metavar = "DIR"),
         make_option("--fdrThreshold", type = "double", default = 0.05, help = "FDR threshold for significant CpGs [default: %default]"),
         make_option("--padjmethod", default = "BH", help = "Method for multiple testing correction [default: %default]"),
@@ -211,6 +212,7 @@ cgCount <- sum(grepl("^cg", colnames(phenoBT1)))
 chCount <- sum(grepl("^ch", colnames(phenoBT1)))
 cat("Number of CpG columns (cg):", cgCount, "\n")
 cat("Number of CpG columns (ch):", chCount, "\n")
+
 cat("=======================================================================\n")
 
 # ----------- Convert Factors -----------
@@ -425,19 +427,30 @@ cat("=======================================================================\n")
 cpgsGLM <- function(
                 fitList,
                 variable,
+                interactionTerm = NULL,  
                 includeResidualSD = opt$summaryResidualSD,
                 pValue = opt$summaryPval,
                 nCores = opt$nCores,
                 libPath = opt$libPath,
-                glmLibList = opt$glmLibList 
+                glmLibList = opt$glmLibList,
+                chunkSize = opt$chunkSize 
+                
 ) {
         cat("Starting extraction for variable:", variable, "\n")
+  
+        splitIntoChunks <- function(x, size) {
+          split(x, ceiling(seq_along(x) / size))
+        }
         
+        cpgNames <- names(fitList)
+        cpgChunks <- splitIntoChunks(cpgNames, chunkSize) 
+
         cl <- makeCluster(nCores)
         clusterExport(
                 cl,
                 varlist = c("fitList", 
                             "variable", 
+                            "interactionTerm",   
                             "includeResidualSD",
                             "pValue",
                             "libPath",
@@ -456,31 +469,41 @@ cpgsGLM <- function(
                 })
         })
         
-        resultList <- parLapply(cl, names(fitList), function(cpg) {
-                modelObj <- fitList[[cpg]]
-                if (is.null(modelObj)) return(NULL)
-                
-                coefTable <- modelObj$coef
-                if (variable %in% rownames(coefTable)) {
-                        out <- coefTable[variable, , drop = FALSE]
-                        out <- as.data.frame(out)
-                        out$CpG <- cpg
-                        out$Coefficient <- variable
-                        
-                        if (includeResidualSD && !is.null(modelObj$residuals)) {
-                                out$ResidualSD <- sd(modelObj$residuals, 
-                                                     na.rm = TRUE)
-                        }
-                        
-                        return(out)
-                } else {
-                        return(NULL)
-                }
+        # Each worker handles a whole chunk
+        chunkResults <- parLapply(cl, cpgChunks, function(chunk) {
+          outList <- list()
+          for (cpg in chunk) {
+            modelObj <- fitList[[cpg]]
+            if (is.null(modelObj)) next
+            
+            coefTable <- modelObj$coef
+            if (!is.null(interactionTerm) && interactionTerm != "") {
+              pattern <- paste0("^", 
+                                variable, ".*:", interactionTerm)
+              matchedRows <- grep(pattern, rownames(coefTable), value = TRUE)
+            } else {
+              matchedRows <- variable   
+            }
+            
+            if (length(matchedRows) == 0) next
+            
+            tmp <- coefTable[matchedRows, , drop = FALSE]
+            tmp <- as.data.frame(tmp)
+            tmp$CpG <- cpg
+            tmp$Coefficient <- rownames(tmp)
+            
+            if (includeResidualSD && !is.null(modelObj$residuals)) {
+              tmp$ResidualSD <- sd(modelObj$residuals, na.rm = TRUE)
+            }
+            
+            outList[[length(outList) + 1]] <- tmp
+          }
+          do.call(rbind, outList)
         })
         
         stopCluster(cl)
         
-        summary <- do.call(rbind, resultList)
+        summary <- do.call(rbind, chunkResults)
         
         if (is.null(summary)) {
                 warning("No CpG-level results extracted for:", variable)
@@ -545,8 +568,9 @@ saveSignificantCpGs <- function(
                 resultList,
                 resultName,
                 baseDir = opt$significantCpGDir,
-                pvalThreshold = opt$significantCpGPval
-) {
+                pvalThreshold = opt$significantCpGPval,
+                interactionTerm = NULL 
+                ) {
         resultDir <- file.path(baseDir, resultName)
         if (!dir.exists(resultDir)) dir.create(resultDir, recursive = TRUE)
         
@@ -554,22 +578,34 @@ saveSignificantCpGs <- function(
                 coefTable <- resultList[[i]]$coef
                 cpgName <- names(resultList)[i]
                 
-                if (resultName %in% rownames(coefTable)) {
-                        pval <- coefTable[resultName, "Pr(>|t|)"]
-                        if (!is.na(pval) && pval < pvalThreshold) {
-                                cpgDir <- file.path(resultDir, cpgName)
-                                if (!dir.exists(cpgDir)) dir.create(cpgDir)
-                                
-                                outputFile <- file.path(cpgDir, 
-                                                        paste0(cpgName, ".txt"))
-                                write.table(coefTable, 
-                                            file = outputFile,
-                                            sep = "\t", 
-                                            quote = FALSE)
+                if (!is.null(interactionTerm) && interactionTerm != "") {
+                  interactionRows <- grep(":", rownames(coefTable), value = FALSE)
+                  if (length(interactionRows) > 0) {
+                    interactionPvals <- coefTable[interactionRows, "Pr(>|t|)"]
+                    if (any(interactionPvals < pvalThreshold, na.rm = TRUE)) {
+                      cpgDir <- file.path(resultDir, cpgName)
+                      if (!dir.exists(cpgDir)) dir.create(cpgDir)
+                      outputFile <- file.path(cpgDir, paste0(cpgName, ".txt"))
+                      write.table(coefTable, file = outputFile, sep = "\t", quote = FALSE)
+                    }
+                  }
+                } else {
+                  if (resultName %in% rownames(coefTable)) {
+                    pval <- coefTable[resultName, "Pr(>|t|)"]
+                    if (!is.na(pval) && pval < pvalThreshold) {
+                            cpgDir <- file.path(resultDir, cpgName)
+                            if (!dir.exists(cpgDir)) dir.create(cpgDir)
+                            outputFile <- file.path(cpgDir, 
+                                                    paste0(cpgName, ".txt"))
+                            write.table(coefTable, 
+                                        file = outputFile,
+                                        sep = "\t", 
+                                        quote = FALSE)
                         }
                 }
+                }
         }
-}
+        }
 
 # ---------- Save Significant CpGs to Directory -----------
 if (opt$saveSignificantCpGs) {
