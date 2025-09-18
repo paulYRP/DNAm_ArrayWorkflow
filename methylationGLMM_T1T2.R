@@ -377,24 +377,24 @@ cpgsLME <- function(
                 nCore = opt$nCores,
                 libPath = opt$libPath,
                 lmeLibs = opt$lmeLibList,
-                chunkSize = opt$chunkSize 
+                chunkSize = opt$chunkSize
                 
 ) {
         cat("Extracting LME interaction effects for:", phenotype, "\n")
-  
+        
         cpgNames <- names(fitList)
         if (is.null(chunkSize)) {
           chunkSize <- max(1000, floor(length(cpgNames) / (nCore * 4)))
         }
         cat("Total CpGs:", length(cpgNames), "| Using chunkSize:", chunkSize, "\n")
-        
+
         splitIntoChunks <- function(x, size) {
           split(x, ceiling(seq_along(x) / size))
         }
-        
-        cpgNames <- names(fitList)                      
-        cpgChunks <- splitIntoChunks(cpgNames, chunkSize) 
-  
+
+        cpgNames <- names(fitList)
+        cpgChunks <- splitIntoChunks(cpgNames, chunkSize)
+
         cl <- makeCluster(nCore)
         clusterExport(
                 cl,
@@ -402,7 +402,7 @@ cpgsLME <- function(
                             "phenotype", "libPath", "lmeLibs"),
                 envir = environment()
         )
-        
+
         clusterEvalQ(cl, {
                 if (!is.null(libPath)) {
                         .libPaths(libPath)
@@ -413,20 +413,20 @@ cpgsLME <- function(
                         }
                 })
         })
-        
+
         results <- parLapplyLB(cl, cpgChunks, function(chunk) {
           outList <- vector("list", length(chunk))
           idx <- 1
           for (cpg in chunk) {
             modelOutput <- fitList[[cpg]]
             if (is.null(modelOutput) || is.null(modelOutput$coef)) next
-            
+
             coefTable <- modelOutput$coef
             pattern <- paste0("^", phenotype, ".*:", interactionTerm)
             matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
-            
+
             if (length(matchedTerms) == 0) next
-            
+
             tmp <- tryCatch({
               do.call(rbind, lapply(matchedTerms, function(term) {
                 coefRow <- coefTable[term, ]
@@ -442,26 +442,26 @@ cpgsLME <- function(
               }))})
             if (!is.null(tmp)) {
               outList[[idx]] <- tmp
-              idx <- idx + 1 
+              idx <- idx + 1
               }
           }
           if (idx > 1) {
-            return(data.table::rbindlist(outList[1:(idx-1)], 
+            return(data.table::rbindlist(outList[1:(idx-1)],
                                          use.names = TRUE, fill = TRUE))
           } else {
             return(NULL)
           }
         })
-        
+
         stopCluster(cl)
-        
+
         summary <- do.call(rbind, results)
-        
+
         if (!is.na(pValue)) {
                 summary <- subset(summary, `P.value` < pValue)
         }
-        
-        
+
+
         cat("Finished extracting interaction for:", phenotype, "\n")
         return(summary)
 }
