@@ -763,7 +763,7 @@ annotateLME <- function(
                         warning(paste("Skipping", modelName, ": required columns not found"))
                         next
                 }
-                
+
                 dfSplit <- split(df, df$Interaction.Term)
                 
                 modelTables <- lapply(names(dfSplit), function(term) {
@@ -773,7 +773,7 @@ annotateLME <- function(
                         pCol <- paste0(modelName, "_", interactionSuffix, "_P.Value")
                         
                         subDf[[pCol]] <- subDf$P.value
-                        
+			subDf <- as.data.frame(subDf)
                         subDf <- subDf[, c("CpG", pCol)]
                         return(subDf)
                 })
@@ -787,12 +787,13 @@ annotateLME <- function(
                                 cleanedSummaries)
         
         annDF <- as.data.frame(annotationObject)
-        annDF$CpG <- rownames(annDF)
+
+	annDF$CpG <- rownames(annDF)
         
         if (!is.null(annotationCols)) {
                 annDF <- annDF[, unique(c("CpG", annotationCols)), drop = FALSE]
         }
-        
+                
         annotatedResults <- merge(mergedSummary, annDF, by = "CpG", all.x = TRUE)
         colnames(annotatedResults)[1] <- "IlmnID"
         
@@ -811,6 +812,16 @@ summaryList <- setNames(
         }),
         phenotypeNames
 )
+
+cat("\n Phenotypes to annotate:\n")
+print(names(summaryList))
+
+for (nm in names(summaryList)) {
+  cat("First few rows of", nm, "summary:\n")
+  print(head(summaryList[[nm]]))
+  cat("Column names in", nm, "summary:\n")
+  print(colnames(summaryList[[nm]]))
+}
 
 # Annotate
 annotatedLME <- annotateLME(
