@@ -150,7 +150,7 @@ for (tp in timepoints) {
   assign(paste0("phenoT", tp), phenoSub)
   
   # Subset matrices using SID (SampleID) from phenoSub
-  sids <- phenoSub[[opt$SampleID]]
+  sids <- as.character(phenoSub[[opt$SampleID]])
   
   assign(paste0("betaT", tp), beta[, sids])
   assign(paste0("mT", tp),    m[,    sids])

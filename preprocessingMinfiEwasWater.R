@@ -510,6 +510,7 @@ cat("=======================================================================\n")
 targets$PredSex <- pSex$predictedSex
 # Convert F = 0 and M = 1 in the column predSex
 targets$PredSex <- ifelse(targets$PredSex == "F", 0, 1)
+targets$Sex <- ifelse(targets$Sex == "F", 0, 1)
 
 # === Remove Failed Samples from targets ===
 targets <- targets[!(targets[[opt$SampleID]] %in% failedSamples), ]
