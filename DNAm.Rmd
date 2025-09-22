@@ -25,7 +25,6 @@ library(knitr)
 library(gridExtra)
 library(grid)
 library(tiff)
-library(rstudioapi)
 
 ```
 
@@ -51,14 +50,29 @@ include_graphics(imgs)
 
 ```{r, echo=F, include=T, out.width="100%"}
 # Folder with TIFFs
+dir <- "figures/preprocessingMinfiEwasWater/qc/"
+
+if (dir.exists(dir)) {
+  
+  files <- list.files(dir, pattern = "\\.tiff$", full.names = TRUE)
+  if (length(files) > 0) {
+    for (f in files) {
+      img <- readTIFF(f)
+      plot(as.raster(img))
+      title(main = basename(f))
+    }
+  }
+}
+
+```
+
+
+```{r, echo=F, include=T, out.width="100%"}
 dir <- "figures/preprocessingMinfiEwasWater/metrics/"
 
 if (dir.exists(dir)) {
   
-  # Find all .tiff files
   files <- list.files(dir, pattern = "\\.tiff$", full.names = TRUE)
-  
-  # Proceed only if files found
   if (length(files) > 0) {
     for (f in files) {
       img <- readTIFF(f)
@@ -77,10 +91,7 @@ dir <- "figures/svaEnmix/sva/"
 
 if (dir.exists(dir)) {
   
-  # Find all .tiff files
   files <- list.files(dir, pattern = "\\.tiff$", full.names = TRUE)
-  
-  # Proceed only if files found
   if (length(files) > 0) {
     for (f in files) {
       img <- readTIFF(f)
@@ -95,14 +106,12 @@ if (dir.exists(dir)) {
 # General Linear Model
 
 ```{r, echo=F, include=T, out.width="50%"}
+
 dir <- "figures/methylationGLM_T1/"
 
 if (dir.exists(dir)) {
   
-  # Find all .tiff files
   files <- list.files(dir, pattern = "\\.tiff$", full.names = TRUE)
-  
-  # Proceed only if files found
   if (length(files) > 0) {
     for (f in files) {
       img <- readTIFF(f)
@@ -110,7 +119,21 @@ if (dir.exists(dir)) {
       title(main = basename(f))
     }
   }
+  
+  subdirs <- list.dirs(dir, recursive = FALSE)
+  for (sub in subdirs) {
+    sub_files <- list.files(sub, pattern = "\\.tiff$", full.names = TRUE)
+    if (length(sub_files) > 0) {
+      sub_name <- basename(sub)  
+      for (f in sub_files) {
+        img <- readTIFF(f)
+        plot(as.raster(img))
+        title(main = paste(sub_name, basename(f), sep = " - "))
+      }
+    }
+  }
 }
+
 
 ```
 
@@ -122,12 +145,24 @@ dir <- "figures/methylationGLMM_T1T2/"
 if (dir.exists(dir)) {
   
   files <- list.files(dir, pattern = "\\.tiff$", full.names = TRUE)
-  
   if (length(files) > 0) {
     for (f in files) {
       img <- readTIFF(f)
       plot(as.raster(img))
       title(main = basename(f))
+    }
+  }
+  
+  subdirs <- list.dirs(dir, recursive = FALSE)
+  for (sub in subdirs) {
+    sub_files <- list.files(sub, pattern = "\\.tiff$", full.names = TRUE)
+    if (length(sub_files) > 0) {
+      sub_name <- basename(sub)  
+      for (f in sub_files) {
+        img <- readTIFF(f)
+        plot(as.raster(img))
+        title(main = paste(sub_name, basename(f), sep = " - "))
+      }
     }
   }
 }
