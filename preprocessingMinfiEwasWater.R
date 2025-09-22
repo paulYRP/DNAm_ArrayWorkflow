@@ -193,15 +193,6 @@ dir.create(normDir, recursive = TRUE, showWarnings = FALSE)
 dir.create(metricsDir, recursive = TRUE, showWarnings = FALSE)
 dir.create(filterDir, recursive = TRUE, showWarnings = FALSE)
 
-# ----------- Prepare Subfolders for enmix -----------
-# Target folder
-enmixDir <- file.path("figures", opt$scriptLabel, "enMix")
-
-# Create directory if missing
-if (!dir.exists(enmixDir)) {
-  dir.create(enmixDir, recursive = TRUE, showWarnings = FALSE)
-}
-
 # ----------- Prepare Subfolders for rData/qc -----------
 
 qcDir <- file.path("rData", opt$scriptLabel, "qc")
@@ -217,7 +208,21 @@ metricsFigDir <- file.path("figures", opt$scriptLabel, "metrics")
 if (!dir.exists(metricsFigDir)) {
   dir.create(metricsFigDir, recursive = TRUE, showWarnings = FALSE)
 }
+# ----------- Prepare Subfolders for figures/qc -----------
 
+qcFigDir <- file.path("figures", opt$scriptLabel, "qc")
+
+if (!dir.exists(qcFigDir)) {
+  dir.create(qcFigDir, recursive = TRUE, showWarnings = FALSE)
+}
+# ----------- Prepare Subfolders for figures/enmix -----------
+# Target folder
+enmixDir <- file.path("figures", opt$scriptLabel, "enMix")
+
+# Create directory if missing
+if (!dir.exists(enmixDir)) {
+  dir.create(enmixDir, recursive = TRUE, showWarnings = FALSE)
+}
 cat("=======================================================================\n")
 
 # ----------- Read Phenotype File -----------
@@ -432,7 +437,7 @@ phenoData <- pData(MSet)
 
 # Ensure output directory exists
 denBetaPath <- file.path("figures", 
-                         opt$scriptLabel, "qc", "densityBeta(MSet).tiff")
+                         opt$scriptLabel, "metrics", "densityBeta(MSet).tiff")
 
 tiff(filename = denBetaPath,
      width = opt$tiffWidth,
