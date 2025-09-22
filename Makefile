@@ -20,9 +20,11 @@ all: \
 	data/preprocessingPheno/phenoT2.csv \
 	data/preprocessingPheno/phenoT1T2.csv \
 	data/methylationGLM_T1/annotatedGLM.csv \
-	data/methylationGLMM_T1T2/annotatedLME.csv
+	data/methylationGLMM_T1T2/annotatedLME.csv \
+	reports/DNAm.pdf
+	
 # ----------------------------------------------------
-# Group target: first3 (Steps 1 to 3 only)
+# Group target: first3 (Steps 1to3 only)
 # ----------------------------------------------------
 .PHONY: f3
 FIRST3 = \
@@ -35,7 +37,7 @@ FIRST3 = \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv
 
-f3: $(FIRST3)
+f3: $(FIRST3) reports/DNAm.pdf
 
 # ----------------------------------------------------
 # Group target: f4 (Steps 1 to 4 only)
@@ -52,7 +54,7 @@ FIRST4 = \
   data/preprocessingPheno/phenoT1T2.csv \
   data/methylationGLM_T1/annotatedGLM.csv
 
-f4: $(FIRST4)
+f4: $(FIRST4) reports/DNAm.pdf
 
 # ----------------------------------------------------
 # Group target: f3lme (Steps 1 to 3 and LME only)
@@ -69,7 +71,7 @@ F3LME = \
   data/preprocessingPheno/phenoT1T2.csv \
   data/methylationGLMM_T1T2/annotatedLME.csv
 
-f3lme: $(F3LME)
+f3lme: $(F3LME) reports/DNAm.pdf
 
 # ----------------------------------------------------
 # Step 1: Minfi Preprocessing
@@ -146,13 +148,13 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessing
 data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
 	Rscript methylationGLMM_T1T2.R \
 	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
-	  --outputLogs logs/ \
-	  --outputRData rData/methylationGLMM_T1T2/models \
-	  --outputPlots figures/methylationGLM_T1T2 \
+	  --outputLogs logs/methylationGLMM_T1T2/model2 \
+	  --outputRData rData/methylationGLMM_T1T2/model2 \
+	  --outputPlots figures/methylationGLMM_T1T2/model2 \
 	  --personVar person \
 	  --timeVar Timepoint \
 	  --phenotypes Group \
-	  --covariates PredSex,Age,Medication,Leukocytes,Epithelial.cells \
+	  --covariates PredSex,Age,Medication,Leukocytes,Epithelial.cells,Comorbidity,ADHD_PRS,GAD_PRS,MDD_PRS \
 	  --factorVars PredSex,Medication,Group,Timepoint \
 	  --lmeLibs lme4,lmerTest \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
@@ -166,7 +168,23 @@ data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rData/preproc
 	  --fdrThreshold  0.05 \
 	  --annotationPackage IlluminaHumanMethylationEPICv2anno.20a1.hg38 \
 	  --annotationCols Name,chr,pos,UCSC_RefGene_Group,UCSC_RefGene_Name,Relation_to_Island,GencodeV41_Group \
-	  --annotatedLMEOut data/methylationGLMM_T1T2/model1
+	  --annotatedLMEOut data/methylationGLMM_T1T2/model2
+
+# ----------------------------------------------------
+# Step 6: Final Report
+# ----------------------------------------------------
+REPORT_INPUTS = DNAm.Rmd \
+                data/methylationGLM_T1/annotatedGLM.csv \
+                data/methylationGLMM_T1T2/annotatedLME.csv \
+                data/preprocessingPheno/phenoT1.csv \
+                data/preprocessingPheno/phenoT2.csv \
+                data/preprocessingPheno/phenoT1T2.csv
+
+reports/DNAm.pdf: $(REPORT_INPUTS)
+	mkdir -p reports logs
+	Rscript -e "rmarkdown::render('DNAm.Rmd', output_file='reports/DNAm.pdf')" > logs/report.log 2>&1
+	@echo "Report built: reports/DNAm.pdf (see logs/report.log for details)"
+
 
 # ----------------------------------------------------
 # Clean up outputs
@@ -184,9 +202,11 @@ clean:
 status:
 	@echo "===== Pipeline Status ====="
 	@test -e rData/preprocessingMinfiEwasWater/objects/RGSet.RData && echo "? Step 1: preprocessingMinfiEwasWater done" || echo "? Step 1: preprocessingMinfiEwasWater outcome file missing"
+	@test -e data/svaEnmix/sva/anova_reduced_sva3.txt && echo "? Step 2: SVA done" || echo "? Step 2: SVA outcome file missing"
 	@test -e data/preprocessingPheno/phenoT1T2.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
 	@test -e data/methylationGLM_T1/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
 	@test -e data/methylationGLMM_T1T2/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
+	@test -e reports/DNAm.pdf && echo "? Step 6: Report generated" || echo "? Step 6: Report missing"
 	@echo "============================"
 
 
