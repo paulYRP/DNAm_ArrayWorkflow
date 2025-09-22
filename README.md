@@ -30,7 +30,8 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
   |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
   | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
   ```
-- `DNA.pdf`, automic report generated with a summary of all steps. 
+- `DNA.pdf`, automic report generated with a summary of all steps.
+- Interaction added to `methylationGLM_T1`.
   
 ## Articles/Tutorial:
 - [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
@@ -67,13 +68,14 @@ The repository is organized to facilitate reproducible analysis, modular develop
 │
 ├── preprocessingMinfiEwasWater.R           # Minfi-Ewastool-WateRmelon-based preprocessing pipeline
 ├── preprocessingPheno.R                    # Phenotype merge and factor conversion
+├── svaEnmix.R                              # Surrogate Variable Analysis
 │
 ├── methylationGLM_T1.R                     # GLM analysis per CpG at T1
-├── methylationGLMM_T1T2.R                  # GLMM longitudinal analysis (e.g., T1 vs T2)
-├── epigeneticAge_T1T2.R                    # Epigenetic clock analysis
-│
+├── methylationGLMM_T1T2.R                  # GLMM longitudinal analysis (e.g., T1 vs T2)│
 ├── Makefile                                # Rule-based automation for pipeline steps
 └── pipeline.pbs                            # PBS job script for Aqua HPC execution
+└── DNAm.Rmd                                # Summary report
+
 ```
 --------------
 ## Running the Pipeline with Makefile and PBS
