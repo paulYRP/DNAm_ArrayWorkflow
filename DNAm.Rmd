@@ -32,7 +32,7 @@ library(tiff)
 setwd(getwd())
 ```
 
-# ENmix: Quality Control Plots
+# Quality Control Plots
 
 ```{r, echo=F, include=T, out.width="100%"}
 # Path to folder
@@ -46,7 +46,7 @@ include_graphics(imgs)
 
 ```
 
-# Minfi: Pre-processing and Filtering
+# Pre-processing and Filtering
 
 ```{r, echo=F, include=T, out.width="100%"}
 # Folder with TIFFs
@@ -66,7 +66,7 @@ if (dir.exists(dir)) {
 
 ```
 
-# Minfi: Post-processing and Filtering 
+# Post-processing and Filtering 
 
 ```{r, echo=F, include=T, out.width="100%"}
 dir <- "figures/preprocessingMinfiEwasWater/metrics/"
@@ -138,7 +138,7 @@ if (dir.exists(dir)) {
 
 ```
 
-# Linear Mixed-Effects Regression
+# Linear Mixed-Effects Model
 
 ```{r, echo=F, include=T, out.width="50%"}
 dir <- "figures/methylationGLMM_T1T2/"
