@@ -9,6 +9,9 @@ RDATA_DIR = rData
 RESULTS_DIR = results
 FIGURES_DIR = figures
 
+# Variables
+MODEL = model1
+
 # Default target
 all: \
 	rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
@@ -19,8 +22,8 @@ all: \
 	data/preprocessingPheno/phenoT1.csv \
 	data/preprocessingPheno/phenoT2.csv \
 	data/preprocessingPheno/phenoT1T2.csv \
-	data/methylationGLM_T1/annotatedGLM.csv \
-	data/methylationGLMM_T1T2/annotatedLME.csv \
+	data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv \
+	data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv \
 	reports/DNAm.pdf
 	
 # ----------------------------------------------------
@@ -52,7 +55,7 @@ FIRST4 = \
   data/preprocessingPheno/phenoT1.csv \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv \
-  data/methylationGLM_T1/annotatedGLM.csv
+  data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv
 
 f4: $(FIRST4) reports/DNAm.pdf
 
@@ -69,7 +72,7 @@ F3LME = \
   data/preprocessingPheno/phenoT1.csv \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv \
-  data/methylationGLMM_T1T2/annotatedLME.csv
+  data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv
 
 f3lme: $(F3LME) reports/DNAm.pdf
 
@@ -86,7 +89,7 @@ data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 	  --mafThreshold 0.1 \
 	  --plotGroupVar Timepoint \
 	  --lcRef salivaEPIC \
-	  --sexColumn PredSex \
+	  --sexColumn Sex \
 	  --phenoOrder "SID;Timepoint;Sex;PredSex;Basename;Sentrix_ID;Sentrix_Position"
 
 # ----------------------------------------------------
@@ -111,20 +114,20 @@ data/preprocessingPheno/phenoT1T2.csv: preprocessingPheno.R data/preprocessingMi
 	  --SampleID SID \
 	  --timepoints 1,2 \
 	  --combineTimepoints 1,2 \
-	  --sexColumn PredSex   
+	  --sexColumn Sex   
 	  
 # ----------------------------------------------------
 # Step 4: GLM for T1
 # ----------------------------------------------------
-data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessingPheno/mergeData/phenoBetaT1.RData
+data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
 	Rscript methylationGLM_T1.R \
-	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1.RData \
-	  --outputLogs logs/ \
-	  --outputRData rData/methylationGLM_T1/models \
-	  --outputPlots figures/methylationGLM_T1 \
+	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
+	  --outputLogs logs/methylationGLM_T1/$(MODEL) \
+	  --outputRData rData/methylationGLM_T1/models/$(MODEL) \
+	  --outputPlots figures/methylationGLM_T1/$(MODEL) \
 	  --phenotypes Group \
-	  --covariates PredSex,Age,Medication,Leukocytes,Epithelial.cells \
-	  --factorVars PredSex,Medication,Group,Timepoint \
+	  --covariates Sex,Age,Medication,Leukocytes,Epithelial.cells \
+	  --factorVars Sex,Medication,Group,Timepoint \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
 	  --nCores 64 \
@@ -135,22 +138,24 @@ data/methylationGLM_T1/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessing
 	  --summaryPval NA \
 	  --summaryResidualSD \
 	  --saveSignificantCpGs \
+	  --significantCpGDir preliminaryResults/cpgs/methylationGLM_T1/$(MODEL) \
 	  --significantCpGPval 0.00001 \
 	  --saveTxtSummaries \
+	  --summaryTxtDir preliminaryResults/summary/methylationGLM_T1/glm/$(MODEL) \
 	  --fdrThreshold  0.05 \
 	  --annotationPackage IlluminaHumanMethylationEPICv2anno.20a1.hg38 \
 	  --annotationCols Name,chr,pos,UCSC_RefGene_Group,UCSC_RefGene_Name,Relation_to_Island,GencodeV41_Group \
-	  --annotatedGLMOut data/methylationGLM_T1/model1
+	  --annotatedGLMOut data/methylationGLM_T1/$(MODEL)
 
 # ----------------------------------------------------
 # Step 5: LME for T1 vs T2 (Longitudinal Analysis)
 # ----------------------------------------------------
-data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
+data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv: methylationGLMM_T1T2.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
 	Rscript methylationGLMM_T1T2.R \
 	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
-	  --outputLogs logs/methylationGLMM_T1T2/model2 \
-	  --outputRData rData/methylationGLMM_T1T2/model2 \
-	  --outputPlots figures/methylationGLMM_T1T2/model2 \
+	  --outputLogs logs/methylationGLMM_T1T2/$(MODEL) \
+	  --outputRData rData/methylationGLMM_T1T2/models/$(MODEL) \
+	  --outputPlots figures/methylationGLMM_T1T2/$(MODEL) \
 	  --personVar person \
 	  --timeVar Timepoint \
 	  --phenotypes Group \
@@ -163,22 +168,23 @@ data/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rData/preproc
 	  --nCores 64 \
 	  --interactionTerm Timepoint \
 	  --saveSignificantInteractions \
+	  --significantInteractionDir preliminaryResults/cpgs/methylationGLMM_T1T2/$(MODEL) \
 	  --significantInteractionPval 0.00001 \
 	  --saveTxtSummaries \
 	  --fdrThreshold  0.05 \
 	  --annotationPackage IlluminaHumanMethylationEPICv2anno.20a1.hg38 \
 	  --annotationCols Name,chr,pos,UCSC_RefGene_Group,UCSC_RefGene_Name,Relation_to_Island,GencodeV41_Group \
-	  --annotatedLMEOut data/methylationGLMM_T1T2/model2
+	  --annotatedLMEOut data/methylationGLMM_T1T2/$(MODEL)
 
 # ----------------------------------------------------
 # Step 6: Final Report
 # ----------------------------------------------------
 REPORT_INPUTS = DNAm.Rmd \
-                data/methylationGLM_T1/annotatedGLM.csv \
-                data/methylationGLMM_T1T2/annotatedLME.csv \
-                data/preprocessingPheno/phenoT1.csv \
-                data/preprocessingPheno/phenoT2.csv \
-                data/preprocessingPheno/phenoT1T2.csv
+                data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv \
+                data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv \
+                rData/preprocessingPheno/mergeData/phenoBetaT1.RData \
+                rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
+                data/preprocessingPheno/phenoT1T2.csv data/preprocessingMinfiEwasWater/phenoLC.csv
 
 reports/DNAm.pdf: $(REPORT_INPUTS)
 	mkdir -p reports logs
@@ -204,8 +210,8 @@ status:
 	@test -e rData/preprocessingMinfiEwasWater/objects/RGSet.RData && echo "? Step 1: preprocessingMinfiEwasWater done" || echo "? Step 1: preprocessingMinfiEwasWater outcome file missing"
 	@test -e data/svaEnmix/sva/anova_reduced_sva3.txt && echo "? Step 2: SVA done" || echo "? Step 2: SVA outcome file missing"
 	@test -e data/preprocessingPheno/phenoT1T2.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
-	@test -e data/methylationGLM_T1/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
-	@test -e data/methylationGLMM_T1T2/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
+	@test -e data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
+	@test -e data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
 	@test -e reports/DNAm.pdf && echo "? Step 6: Report generated" || echo "? Step 6: Report missing"
 	@echo "============================"
 
