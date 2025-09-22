@@ -437,7 +437,7 @@ phenoData <- pData(MSet)
 
 # Ensure output directory exists
 denBetaPath <- file.path("figures", 
-                         opt$scriptLabel, "metrics", "densityBeta(MSet).tiff")
+                         opt$scriptLabel, "qc", "densityBeta(MSet).tiff")
 
 tiff(filename = denBetaPath,
      width = opt$tiffWidth,
