@@ -213,6 +213,9 @@ chCount <- sum(grepl("^ch", colnames(phenoBT1)))
 cat("Number of CpG columns (cg):", cgCount, "\n")
 cat("Number of CpG columns (ch):", chCount, "\n")
 
+cat("Checking structure of the dataset...\n")
+print(table(phenoBT1[[opt$interactionTerm]]))
+
 cat("=======================================================================\n")
 
 # ----------- Convert Factors -----------
@@ -436,102 +439,109 @@ cpgsGLM <- function(
                 chunkSize = opt$chunkSize 
                 
 ) {
-        cat("Starting extraction for variable:", variable, "\n")
-        cpgNames <- names(fitList)
-        if (is.null(chunkSize)) {
-          chunkSize <- max(10000, floor(length(cpgNames) / (nCore * 4)))
-        }
-        cat("Total CpGs:", length(cpgNames), "| Using chunkSize:", chunkSize, "\n")
+  cat("Starting extraction for variable:", variable, "\n")
+  cpgNames <- names(fitList)
+  if (is.null(chunkSize)) {
+    chunkSize <- max(1000, floor(length(cpgNames) / (nCore * 4)))
+  }
+  cat("Total CpGs:", length(cpgNames), "| Using chunkSize:", chunkSize, "\n")
   
-        splitIntoChunks <- function(x, size) {
-          split(x, ceiling(seq_along(x) / size))
+  splitIntoChunks <- function(x, size) {
+    split(x, ceiling(seq_along(x) / size))
+  }
+  
+  cpgNames <- names(fitList)
+  cpgChunks <- splitIntoChunks(cpgNames, chunkSize) 
+  
+  cl <- makeCluster(nCore)
+  clusterExport(
+    cl,
+    varlist = c("fitList", 
+                "variable", 
+                "interactionTerm",   
+                "includeResidualSD",
+                "pValue",
+                "libPath",
+                "glmLibList"),
+    envir = environment()
+  )
+  
+  clusterEvalQ(cl, {
+    if (!is.null(libPath)) {
+      .libPaths(libPath)
+    }
+    sapply(glmLibList, function(pkg) {
+      if (!require(pkg, character.only = TRUE)) {
+        stop(paste("Failed to load package:", pkg))
+      }
+    })
+  })
+  
+  results <- parLapplyLB(cl, cpgChunks, function(chunk) {
+    outList <- vector("list", length(chunk))
+    idx <- 1
+    for (cpg in chunk) {
+      modelObj <- fitList[[cpg]]
+      if (is.null(modelObj) || is.null(modelObj$coef)) next
+      
+      coefTable <- modelObj$coef
+      if (!is.null(interactionTerm) && interactionTerm != "") {
+        pattern <- paste0("^", 
+                          variable, ".*:", interactionTerm)
+        matchedRows <- grep(pattern, rownames(coefTable), value = TRUE)
+        
+        if (length(matchedRows) == 0) {
+          matchedRows <- grep(paste0("^", variable), 
+                              rownames(coefTable), value = TRUE)
         }
-        
-        cpgNames <- names(fitList)
-        cpgChunks <- splitIntoChunks(cpgNames, chunkSize) 
-
-        cl <- makeCluster(nCore)
-        clusterExport(
-                cl,
-                varlist = c("fitList", 
-                            "variable", 
-                            "interactionTerm",   
-                            "includeResidualSD",
-                            "pValue",
-                            "libPath",
-                            "glmLibList"),
-                envir = environment()
-        )
-        
-        clusterEvalQ(cl, {
-                if (!is.null(libPath)) {
-                        .libPaths(libPath)
-                }
-                sapply(glmLibList, function(pkg) {
-                        if (!require(pkg, character.only = TRUE)) {
-                                stop(paste("Failed to load package:", pkg))
-                        }
-                })
-        })
-        
-        results <- parLapplyLB(cl, cpgChunks, function(chunk) {
-          outList <- vector("list", length(chunk))
-          idx <- 1
-          for (cpg in chunk) {
-            modelObj <- fitList[[cpg]]
-            if (is.null(modelObj) || is.null(modelObj$coef)) next
-            
-            coefTable <- modelObj$coef
-            if (!is.null(interactionTerm) && interactionTerm != "") {
-              pattern <- paste0("^", 
-                                variable, ".*:", interactionTerm)
-              matchedRows <- grep(pattern, rownames(coefTable), value = TRUE)
-            } else {
-              matchedRows <- variable   
-            }
-            
-            if (length(matchedRows) == 0) next
-            
-            tmp <- coefTable[matchedRows, , drop = FALSE]
-            tmp <- as.data.frame(tmp)
-            tmp$CpG <- cpg
-            tmp$Coefficient <- rownames(tmp)
-            
-            if (includeResidualSD && !is.null(modelObj$residuals)) {
-              tmp$ResidualSD <- sd(modelObj$residuals, na.rm = TRUE)
-            }
-            
-            if (!is.null(tmp)) {
-              outList[[idx]] <- tmp
-              idx <- idx + 1
-            }
-          }
-          do.call(rbind, outList)
-        })
-        
-        stopCluster(cl)
-        
-        summary <- do.call(rbind, results)
-        
-        if (is.null(summary)) {
-                warning("No CpG-level results extracted for:", variable)
-                return(NULL)
-        }
-        
-        cols <- c("CpG", "Coefficient", "Estimate", "Std. Error", "t value", 
-                  "Pr(>|t|)")
-        if (includeResidualSD) cols <- c(cols, "ResidualSD")
-        summary <- summary[, cols, drop = FALSE]
-        
-        if (!is.na(pValue)) {
-                summary <- subset(summary, `Pr(>|t|)` < pValue)
-        }
-        
-        rownames(summary) <- NULL
-        
-        cat("Completed GLM summary extraction for:", variable, "\n")
-        return(summary)
+      } else {
+        matchedRows <- grep(paste0("^", variable), 
+                            rownames(coefTable), value = TRUE)            
+      }
+      
+      if (length(matchedRows) == 0) next
+      
+      tmp <- coefTable[matchedRows, , drop = FALSE]
+      tmp <- as.data.frame(tmp)
+      tmp$CpG <- cpg
+      tmp$Coefficient <- rownames(tmp)
+      
+      if (includeResidualSD && !is.null(modelObj$residuals)) {
+        tmp$ResidualSD <- sd(modelObj$residuals, na.rm = TRUE)
+      }
+      
+      if (!is.null(tmp)) {
+        outList[[idx]] <- tmp
+        idx <- idx + 1
+      }
+    }
+    do.call(rbind, outList)
+  })
+  
+  stopCluster(cl)
+  
+  summary <- do.call(rbind, results)
+  
+  if (is.null(summary) || nrow(summary) == 0) {
+    warning("No CpG-level results extracted for variable:", variable)
+    return(NULL)
+  }
+  
+  cols <- c("CpG", "Coefficient", "Estimate", "Std. Error", "t value", 
+            "Pr(>|t|)")
+  if (includeResidualSD) cols <- c(cols, "ResidualSD")
+  summary <- summary[, cols, drop = FALSE]
+  
+  if (!is.na(pValue)) {
+    summary <- subset(summary, `Pr(>|t|)` < pValue)
+  }
+  
+  rownames(summary) <- NULL
+  
+  cat("Completed GLM summary extraction for:", variable, "\n")
+  return(summary)
 }
+
 cat("=======================================================================\n")
 phenotypeList <- strsplit(opt$phenotypes, ",")[[1]]
 
@@ -578,42 +588,43 @@ saveSignificantCpGs <- function(
                 baseDir = opt$significantCpGDir,
                 pvalThreshold = opt$significantCpGPval,
                 interactionTerm = NULL 
-                ) {
-        resultDir <- file.path(baseDir, resultName)
-        if (!dir.exists(resultDir)) dir.create(resultDir, recursive = TRUE)
-        
-        for (i in seq_along(resultList)) {
-                coefTable <- resultList[[i]]$coef
-                cpgName <- names(resultList)[i]
-                
-                if (!is.null(interactionTerm) && interactionTerm != "") {
-                  interactionRows <- grep(":", rownames(coefTable), value = FALSE)
-                  if (length(interactionRows) > 0) {
-                    interactionPvals <- coefTable[interactionRows, "Pr(>|t|)"]
-                    if (any(interactionPvals < pvalThreshold, na.rm = TRUE)) {
-                      cpgDir <- file.path(resultDir, cpgName)
-                      if (!dir.exists(cpgDir)) dir.create(cpgDir)
-                      outputFile <- file.path(cpgDir, paste0(cpgName, ".txt"))
-                      write.table(coefTable, file = outputFile, sep = "\t", quote = FALSE)
-                    }
-                  }
-                } else {
-                  if (resultName %in% rownames(coefTable)) {
-                    pval <- coefTable[resultName, "Pr(>|t|)"]
-                    if (!is.na(pval) && pval < pvalThreshold) {
-                            cpgDir <- file.path(resultDir, cpgName)
-                            if (!dir.exists(cpgDir)) dir.create(cpgDir)
-                            outputFile <- file.path(cpgDir, 
-                                                    paste0(cpgName, ".txt"))
-                            write.table(coefTable, 
-                                        file = outputFile,
-                                        sep = "\t", 
-                                        quote = FALSE)
-                        }
-                }
-                }
+) {
+  resultDir <- file.path(baseDir, resultName)
+  if (!dir.exists(resultDir)) dir.create(resultDir, recursive = TRUE)
+  
+  for (i in seq_along(resultList)) {
+    coefTable <- resultList[[i]]$coef
+    cpgName <- names(resultList)[i]
+    
+    if (!is.null(interactionTerm) && interactionTerm != "") {
+      pattern <- paste0("^", resultName, ".*:", interactionTerm)
+      matchedRows <- grep(pattern, rownames(coefTable), value = TRUE)
+      
+      if (length(matchedRows) == 0) {
+        matchedRows <- grep(paste0("^", resultName), 
+                            rownames(coefTable), value = TRUE)
+        if (length(matchedRows) > 0) {
+          cat("Interaction term", interactionTerm, "dropped for CpG", cpgName, 
+              "- extracting main effect for", resultName, "\n")
         }
-        }
+      }
+    } else {
+      matchedRows <- grep(paste0("^", resultName), 
+                          rownames(coefTable), value = TRUE)
+    }
+
+    if (length(matchedRows) > 0) {
+      matchedPvals <- coefTable[matchedRows, "Pr(>|t|)"]
+      
+      if (any(matchedPvals < pvalThreshold, na.rm = TRUE)) {
+        cpgDir <- file.path(resultDir, cpgName)
+        if (!dir.exists(cpgDir)) dir.create(cpgDir)
+        outputFile <- file.path(cpgDir, paste0(cpgName, ".txt"))
+        write.table(coefTable, file = outputFile, sep = "\t", quote = FALSE)
+      }
+    }
+  }
+}
 
 # ---------- Save Significant CpGs to Directory -----------
 if (opt$saveSignificantCpGs) {
@@ -837,10 +848,18 @@ annotateGLM <- function(
         
         cat("Merging GLM summaries...\n")
         cleanedSummaries <- lapply(modelNames, function(modelName) {
-                df <- summaryList[[modelName]]
-                df[[paste0(modelName, "P.Value")]] <- df$`Pr(>|t|)`
-                df <- df[, c("CpG", paste0(modelName, "P.Value"))]
-                return(df)
+          df <- summaryList[[modelName]]
+          
+          coefName <- unique(df$Coefficient)
+          if (length(coefName) > 1) {
+            warning("Multiple coefficients found in ", modelName, 
+                    ". Using the first: ", coefName[1])
+            coefName <- coefName[1]
+          }
+          
+          df[[paste0(coefName, "P.Value")]] <- df$`Pr(>|t|)`
+          df <- df[, c("CpG", paste0(coefName, "P.Value"))]
+          return(df)
         })
         
         mergedSummary <- Reduce(function(x, y) merge(x, 
@@ -856,7 +875,10 @@ annotateGLM <- function(
         annotatedResults <- merge(mergedSummary, 
                                   annDF, by = "CpG", all.x = TRUE)
         
-        finalCols <- c("CpG", paste0(modelNames, "P.Value"), annotationCols)
+        finalCols <- c("CpG", 
+                       unlist(lapply(cleanedSummaries, function(df) colnames(df)[2])), 
+                       annotationCols)
+        
         annotatedResults <- annotatedResults[, finalCols]
         colnames(annotatedResults)[1] <- "IlmnID"
         

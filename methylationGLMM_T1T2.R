@@ -754,6 +754,8 @@ annotateLME <- function(
 ) {
         modelNames <- names(summaryList)
         
+        cat("Merging LME summaries...\n")
+        
         cleanedSummaries <- list()
         
         for (modelName in modelNames) {
@@ -773,7 +775,7 @@ annotateLME <- function(
                         pCol <- paste0(modelName, "_", interactionSuffix, "_P.Value")
                         
                         subDf[[pCol]] <- subDf$P.value
-			subDf <- as.data.frame(subDf)
+			          subDf <- as.data.frame(subDf)
                         subDf <- subDf[, c("CpG", pCol)]
                         return(subDf)
                 })

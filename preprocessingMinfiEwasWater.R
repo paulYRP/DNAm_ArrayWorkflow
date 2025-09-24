@@ -486,11 +486,12 @@ cat("=======================================================================\n")
 pSexD <- as.data.frame(pSex) 
 pSexD <- merge(pSexD, targets, by.x="row.names", by.y = opt$SampleID)
 head(pSexD[, 1:4])
+targets$Sex <- ifelse(targets$Sex == "F", 0, 1)
 
 
-# -------------- Plot Sex clinical predictions --------------
+# -------------- Plot Sex predictions --------------
 pSexClPath <- file.path("figures", 
-                      opt$scriptLabel, "qc", "sexPredictionClinical(GSet).tiff")
+                      opt$scriptLabel, "qc", "sexClinical(GSet).tiff")
 
 tiff(filename = pSexClPath,
      width = opt$tiffWidth,
@@ -510,7 +511,6 @@ cat("=======================================================================\n")
 targets$PredSex <- pSex$predictedSex
 # Convert F = 0 and M = 1 in the column predSex
 targets$PredSex <- ifelse(targets$PredSex == "F", 0, 1)
-targets$Sex <- ifelse(targets$Sex == "F", 0, 1)
 
 # === Remove Failed Samples from targets ===
 targets <- targets[!(targets[[opt$SampleID]] %in% failedSamples), ]
