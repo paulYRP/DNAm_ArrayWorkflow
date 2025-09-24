@@ -32,6 +32,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
   ```
 - `DNA.pdf`, automic report generated with a summary of all steps.
 - Interaction added to `methylationGLM_T1`.
+- `methylationGLM_T1` and `methylationGLMM_T1T2` extract categorical and numerical coefficients to the annotatedLME.csv and annotatedGLM.csv. 
   
 ## Articles/Tutorial:
 - [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
