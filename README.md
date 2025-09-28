@@ -59,7 +59,7 @@ The repository is organized to facilitate reproducible analysis, modular develop
 │   ├── preprocessingMinfiEwasWater/
 │   │   ├── idats/                          # Folder containing raw IDAT files
 │   │   ├── pheno.csv                       # Phenotype file with sample metadata
-│   │   └── 12864_2024_10027_MOESM8_ESM.csv # Optional: Cross-reactivity comparison reference
+│   │   └── 12864_2024_10027_MOESM8_ESM.csv # Cross-reactivity comparison reference
 │
 ├── rData/                                  # Processed R objects (MSet, Beta, CN matrices, etc.)
 ├── logs/                                   # Logging output from script runs
