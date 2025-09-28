@@ -10,7 +10,7 @@ RESULTS_DIR = results
 FIGURES_DIR = figures
 
 # Variables
-MODEL = model1
+MODEL = model2
 
 # Default target
 all: \
@@ -126,7 +126,7 @@ data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv: methylationGLM_T1.R rData/prep
 	  --outputRData rData/methylationGLM_T1/models/$(MODEL) \
 	  --outputPlots figures/methylationGLM_T1/$(MODEL) \
 	  --phenotypes Group \
-	  --covariates Sex,Age,Medication,Leukocytes,Epithelial.cells \
+	  --covariates Sex,Age,Medication,Leukocytes,Epithelial.cells,ADHD_PRS,GAD_PRS,MDD_PRS,PTSD_PRS,Comorbidity \
 	  --factorVars Sex,Medication,Group,Timepoint \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
@@ -180,8 +180,6 @@ data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv: methylationGLMM_T1T2.R rDat
 # Step 6: Final Report
 # ----------------------------------------------------
 REPORT_INPUTS = DNAm.Rmd \
-                data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv \
-                data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv \
                 rData/preprocessingPheno/mergeData/phenoBetaT1.RData \
                 rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
                 data/preprocessingPheno/phenoT1T2.csv data/preprocessingMinfiEwasWater/phenoLC.csv
