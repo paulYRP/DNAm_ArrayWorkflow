@@ -38,6 +38,62 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 - [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
 - [**DNA Methylation Tutorial**](https://n10962646.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
 
+## Getting Started
+
+Place your inputs exactly as the following:
+
+```
+DNAm_ArrayWorkflow/
+└─ data/
+   └─ preprocessingMinfiEwasWater/
+      ├─ idats/          # All raw .idat files (both *Red.idat and *Grn.idat)
+      └─ pheno.csv       # Sample (phenotype) table
+```
+### Minimal columns in **pheno.csv**
+
+* `SampleID` — unique ID per sample.
+* `Basename` — must match the IDAT mapping.
+* `Sentrix_ID` — slide ID (e.g., `2034567890`).
+* `Sentrix_Position` — array position (e.g., `R01C01`).
+* Basic covariates used in models: `Sex`, `Age`, `Timepoint`.
+
+### Raw methylation data (**IDATs**)
+
+* Idat files (e.g., `2034567890_R01C01_Red.idat` and `2034567890_R01C01_Grn.idat`) in `data/preprocessingMinfiEwasWater/idats/`.
+
+**Step 1 — Clone reporsitory**
+
+```bash
+git clone https://github.com/n10962646/DNAm_ArrayWorkflow.git
+cd DNAm_ArrayWorkflow
+```
+
+**Step 2 — Preprocess + QC (objects + beta/M + cells + SVA + clock files)**
+
+```bash
+make -j1 f3
+```
+
+This target runs the first three stages and produces: beta/M metrics, core R objects (e.g., RGSet/MSet), cell estimates, SVA report, and clock-compatible files.
+
+**Step 4 — Cross-sectional GLM**
+
+```bash
+make -j1 f4
+```
+
+Generates `annotatedGLM.csv`, adding gene/region context to significant CpGs (columns like `IlmnID`, `Name`, `chr`, `pos`, `UCSC_RefGene_Group`, etc.). 
+
+**Step 5 — Longitudinal (LME)**
+
+```bash
+make -j1 f3lme
+```
+
+Produces `annotatedLME.csv` for longitudinal effects.
+
+An automatic PDF report is generated summarising steps (`DNA.pdf`).
+
 --------------
 ## Hardware Requirements
 
