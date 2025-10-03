@@ -23,7 +23,7 @@ DNAm_ArrayWorkflow/
 ```
 ### Minimal columns in **pheno.csv**
 
-* `SampleID` — unique ID per sample.
+* `SID` — unique ID per sample.
 * `Basename` — must match the IDAT mapping.
 * `Sentrix_ID` — slide ID (e.g., `2034567890`).
 * `Sentrix_Position` — array position (e.g., `R01C01`).
