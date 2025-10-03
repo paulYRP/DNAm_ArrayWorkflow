@@ -54,7 +54,7 @@ Runs the first three stages and produces:
 * Cell composition estimates
 * SVA report
 * Epigenetic clock–ready files
-* 
+
 **Step 3 — Cross-sectional GLM**
 
 ```bash
