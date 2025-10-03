@@ -90,8 +90,8 @@ Running `make` will always produce an updated PDF report (`DNA.pdf`) that summar
 --------------
 ## Hardware Requirements
 
-- HPC or workstation with sufficient RAM for large array datasets (≥ 8TB recommended)
-- For visualization, interactive usage of RStudio (desktop/server) is recommended
+- HPC or workstation with sufficient RAM for large array datasets (≥ 1TB recommended for the option make -j1 f3). You will need > 2TB to run GLM and LME steps in a local computer. 
+- For visualization, interactive usage of RStudio (desktop/server) is recommended.
 
 ## Software Requirements
 
