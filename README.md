@@ -84,7 +84,8 @@ Produces `matrices + objects + annotatedLME.csv` for longitudinal effects.
   ```
 
 📑 **Report generation**
-No matter which path you take, running `make` will always produce an updated PDF report (`DNA.pdf`) that summarises all steps completed.
+
+Running `make` will always produce an updated PDF report (`DNA.pdf`) that summarises all steps completed.
 
 --------------
 ## Hardware Requirements
