@@ -39,6 +39,7 @@ DNAm_ArrayWorkflow/
 git clone https://github.com/n10962646/DNAm_ArrayWorkflow.git
 cd DNAm_ArrayWorkflow
 ```
+⚠️ **After Step 1, you may proceed directly to Step 2, 3, or 4 depending on your output needs.**
 
 **Step 2 — Preprocess + QC (objects + beta/M + cells + SVA + clock files)**
 
@@ -46,25 +47,44 @@ cd DNAm_ArrayWorkflow
 make -j1 f3
 ```
 
-This target runs the first three stages and produces: beta/M metrics, core R objects (e.g., RGSet/MSet), cell estimates, SVA report, and clock-compatible files.
+Runs the first three stages and produces:
 
-**Step 4 — Cross-sectional GLM**
+* Beta/M matrices
+* Core R objects (e.g., RGSet/MSet)
+* Cell composition estimates
+* SVA report
+* Epigenetic clock–ready files
+* 
+**Step 3 — Cross-sectional GLM**
 
 ```bash
 make -j1 f4
 ```
 
-Generates `annotatedGLM.csv`, adding gene/region context to significant CpGs (columns like `IlmnID`, `Name`, `chr`, `pos`, `UCSC_RefGene_Group`, etc.). 
+Generates `matrices + objects + annotatedGLM.csv`, adding gene/region context to significant CpGs (columns like `IlmnID`, `Name`, `chr`, `pos`, `UCSC_RefGene_Group`, etc.). 
 
-**Step 5 — Longitudinal (LME)**
+```bash
+  | IlmnID             | Phenotype1P.Value | Phenotype2P.Value | Phenotype3P.Value | Phenotype4P.Value | Phenotype5P.Value | Phenotype6P.Value | Phenotype7P.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
+  |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
+  | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
+  ``` 
+
+**Step 4 — Longitudinal (LME)**
 
 ```bash
 make -j1 f3lme
 ```
 
-Produces `annotatedLME.csv` for longitudinal effects.
+Produces `matrices + objects + annotatedLME.csv` for longitudinal effects.
 
-An automatic PDF report is generated summarising steps (`DNA.pdf`).
+ ```bash
+  | IlmnID             | Phenotype1_Timepoint3_P.Value | Phenotype2_Timepoint3_P.Value | Phenotype3_Timepoint3_P.Value | Phenotype4_Timepoint3_P.Value | Phenotype5_Timepoint3_P.Value | Phenotype6_Timepoint3_P.Value | Phenotype7_Timepoint3_P.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
+  |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
+  | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
+  ```
+
+📑 **Report generation**
+No matter which path you take, running `make` will always produce an updated PDF report (`DNA.pdf`) that summarises all steps completed.
 
 --------------
 ## Hardware Requirements
@@ -142,18 +162,8 @@ qsub pipeline.pbs
   - CSV file and ZIP file compatible with [ClockFundation](https://dnamage.clockfoundation.org/)
 - `make -j1 f4` added to execute only the first 4 steps. Output:
   - annotatedGLM.csv
-  ```bash
-  | IlmnID             | Phenotype1P.Value | Phenotype2P.Value | Phenotype3P.Value | Phenotype4P.Value | Phenotype5P.Value | Phenotype6P.Value | Phenotype7P.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
-  |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
-  | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
-  ``` 
 - `make -j1 f3lme` added to execute only the first 3 + LMER. Output:
   - annotatedLME.csv
-  ```bash
-  | IlmnID             | Phenotype1_Timepoint3_P.Value | Phenotype2_Timepoint3_P.Value | Phenotype3_Timepoint3_P.Value | Phenotype4_Timepoint3_P.Value | Phenotype5_Timepoint3_P.Value | Phenotype6_Timepoint3_P.Value | Phenotype7_Timepoint3_P.Value | Name               | chr   | pos       | UCSC_RefGene_Group                           | UCSC_RefGene_Name         | Relation_to_Island | GencodeV41_Group                     |
-  |--------------------|------------------------|----------------------|---------------------|-------------------------|--------------------------|------------------------|--------------------------|--------------------|-------|-----------|-----------------------------------------------|----------------------------|---------------------|--------------------------------------|
-  | cgXXXXXXXX_TC21    |                        |                      |                     |                         |                          |                        |                          | cgXXXXXXXX_TC21    | chrX  | ######### | TSS1500;Exon1;5UTR;...                      | RBL2;RBL2;...              | Shore / OpenSea     | exon_1;TSS1500;...                    |
-  ```
 - `DNA.pdf`, automic report generated with a summary of all steps.
 - Interaction added to `methylationGLM_T1`.
 - `methylationGLM_T1` and `methylationGLMM_T1T2` extract categorical and numerical coefficients to the annotatedGLM.csv and annotatedLME.csv. 
