@@ -33,7 +33,7 @@ DNAm_ArrayWorkflow/
 
 * Idat files (e.g., `2034567890_R01C01_Red.idat` and `2034567890_R01C01_Grn.idat`) in `data/preprocessingMinfiEwasWater/idats/`.
 
-**Step 1 — Clone reporsitory**
+**Step 1 — Clone repository**
 
 ```bash
 git clone https://github.com/n10962646/DNAm_ArrayWorkflow.git
