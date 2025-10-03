@@ -4,10 +4,12 @@
 
 This repository contains a reproducible pipeline for DNA methylation (DNAm) analysis using Illumina MethylationEPIC v2.0 arrays. It includes preprocessing, quality control, phenotype merging, and statistical modeling (GLM and GLMM) for mental health phenotypes using both `minfi`, `watermelon` and `ewastools` frameworks. The pipeline is modular, HPC-compatible, and fully parameterized via command-line arguments. 
 
+--------------
 ## Articles/Tutorial:
 - [**A Novel Longitudinal Epigenome-Wide Study of Posttraumatic**](https://github.com/n10962646/DNAm_ArrayWorkflow/blob/main/A%20Novel%20Longitudinal%20Epigenome-Wide%20Study%20of%20Posttraumatic.pdf)
 - [**DNA Methylation Tutorial**](https://n10962646.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
-
+  
+--------------
 ## Getting Started
 
 Place your inputs exactly as the following:
@@ -118,6 +120,14 @@ make status
 make clean
 ```
 
+**Submit via PBS (on Aqua HPC)**: 
+To run the full pipeline in a high-performance environment as Aqua (QUT). 
+
+```bash
+qsub pipeline.pbs
+```
+
+--------------
 ## News
 
 ### 21/08/2025
@@ -147,10 +157,3 @@ make clean
 - `DNA.pdf`, automic report generated with a summary of all steps.
 - Interaction added to `methylationGLM_T1`.
 - `methylationGLM_T1` and `methylationGLMM_T1T2` extract categorical and numerical coefficients to the annotatedGLM.csv and annotatedLME.csv. 
-
-**Submit via PBS (on Aqua HPC)**: 
-To run the full pipeline in a high-performance environment as Aqua (QUT). 
-
-```bash
-qsub pipeline.pbs
-```
