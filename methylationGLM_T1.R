@@ -214,8 +214,15 @@ cat("Number of CpG columns (cg):", cgCount, "\n")
 cat("Number of CpG columns (ch):", chCount, "\n")
 
 cat("Checking structure of the dataset...\n")
-print(table(phenoBT1[[opt$interactionTerm]]))
-
+if (!is.null(opt$interactionTerm) && opt$interactionTerm != "") {
+  if (opt$interactionTerm %in% names(phenoBT1)) {
+    print(table(phenoBT1[[opt$interactionTerm]], useNA = "ifany"))
+  } else {
+    cat("Warning: interactionTerm not found in phenoBT1 columns.\n")
+  }
+} else {
+  cat("No interaction term specified; skipping table summary.\n")
+}
 cat("=======================================================================\n")
 
 # ----------- Convert Factors -----------
@@ -348,7 +355,12 @@ glm <- function(
         
         fit <- function(cpg) {
                 tryCatch({
-                        model <- merge[, c(phenoScore, interactionTerm, covariates, cpg)]
+                        vars <- unique(c(phenoScore, 
+                                                 covariates, 
+                                                 cpg, 
+                                                 if (!is.null(interactionTerm) && interactionTerm != "") interactionTerm))
+                  
+                        model <- merge[, vars, drop = FALSE]
                         colnames(model)[ncol(model)] <- "beta"
                         
                         for (var in factorVars) {
