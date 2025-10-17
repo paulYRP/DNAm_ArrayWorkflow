@@ -170,6 +170,7 @@ data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv: methylationGLMM_T1T2.R rDat
 	  --significantInteractionDir preliminaryResults/cpgs/methylationGLMM_T1T2/$(MODEL) \
 	  --significantInteractionPval 0.00001 \
 	  --saveTxtSummaries \
+	  --summaryTxtDir preliminaryResults/summary/methylationGLMM_T1T2/$(MODEL) \
 	  --fdrThreshold  0.05 \
 	  --annotationPackage IlluminaHumanMethylationEPICv2anno.20a1.hg38 \
 	  --annotationCols Name,chr,pos,UCSC_RefGene_Group,UCSC_RefGene_Name,Relation_to_Island,GencodeV41_Group \
