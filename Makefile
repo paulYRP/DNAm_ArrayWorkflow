@@ -10,7 +10,7 @@ RESULTS_DIR = results
 FIGURES_DIR = figures
 
 # Variables
-MODEL = model2
+MODEL = profession
 
 # Default target
 all: \
@@ -95,11 +95,11 @@ data/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWater.R
 # ----------------------------------------------------
 # Step 2: Surrogate Variable Analysis
 # ----------------------------------------------------
-rData/svaEnmix/metrics/ctrlsva.done: svaEnmix.R data/preprocessingMinfiEwasWater/phenoLC.csv
+data/svaEnmix/sva/summary_full_sva2.txt: svaEnmix.R data/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript svaEnmix.R \
 	  --SampleID SID \
-	  --SentrixIDColumn Sentrix_ID\
-	  --SentrixPositionColumn Sentrix_Position
+	  --SentrixIDColumn SentrixBarcode \
+	  --SentrixPositionColumn Chipposition
 
 # ----------------------------------------------------
 # Step 3: Merge Phenotype
@@ -119,19 +119,18 @@ data/preprocessingPheno/phenoT1T2.csv: preprocessingPheno.R data/preprocessingMi
 # ----------------------------------------------------
 # Step 4: GLM for T1
 # ----------------------------------------------------
-data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData
+data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv: methylationGLM_T1.R rData/preprocessingPheno/mergeData/phenoBetaT1.RData
 	Rscript methylationGLM_T1.R \
-	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1T2.RData \
+	  --inputPheno rData/preprocessingPheno/mergeData/phenoBetaT1.RData \
 	  --outputLogs logs/methylationGLM_T1/$(MODEL) \
 	  --outputRData rData/methylationGLM_T1/models/$(MODEL) \
 	  --outputPlots figures/methylationGLM_T1/$(MODEL) \
-	  --phenotypes Group \
-	  --covariates Sex,Age,Medication,Leukocytes,Epithelial.cells,ADHD_PRS,GAD_PRS,MDD_PRS,PTSD_PRS,Comorbidity \
-	  --factorVars Sex,Medication,Group,Timepoint \
+	  --phenotypes Profession \
+	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells,BMI \
+	  --factorVars Sex,Ethnicity,TraumaDefinition,Profession \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
 	  --nCores 64 \
-	  --interactionTerm Timepoint \
 	  --plotWidth 2000 --plotHeight 1000 --plotDPI 150 \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 	  --glmLibs glm2 \
@@ -158,9 +157,9 @@ data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv: methylationGLMM_T1T2.R rDat
 	  --outputPlots figures/methylationGLMM_T1T2/$(MODEL) \
 	  --personVar person \
 	  --timeVar Timepoint \
-	  --phenotypes Group \
-	  --covariates PredSex,Age,Medication,Leukocytes,Epithelial.cells,Comorbidity,ADHD_PRS,GAD_PRS,MDD_PRS \
-	  --factorVars PredSex,Medication,Group,Timepoint \
+	  --phenotypes Profession \
+	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells,BMI \
+	  --factorVars Sex,Ethnicity,TraumaDefinition,Profession \
 	  --lmeLibs lme4,lmerTest \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 	  --cpgPrefix cg \
