@@ -486,8 +486,10 @@ cat("=======================================================================\n")
 pSexD <- as.data.frame(pSex) 
 pSexD <- merge(pSexD, targets, by.x="row.names", by.y = opt$SampleID)
 head(pSexD[, 1:4])
-targets$Sex <- ifelse(targets$Sex == "F", 0, 1)
 
+if (is.character(targets$Sex) || is.factor(targets$Sex)) {
+  targets$Sex <- ifelse(targets$Sex %in% c("F", "Female", "f", "female", "FEMALE"), 0, 1)
+}
 
 # -------------- Plot Sex predictions --------------
 pSexClPath <- file.path("figures", 
