@@ -17,7 +17,7 @@ all: \
 	rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
 	rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
-	rData/svaEnmix/metrics/ctrlsva.done \
+	data/svaEnmix/sva/summary_full_sva2.txt \
 	data/preprocessingMinfiEwasWater/phenoLC.csv \
 	data/preprocessingPheno/phenoT1.csv \
 	data/preprocessingPheno/phenoT2.csv \
@@ -35,7 +35,7 @@ FIRST3 = \
   rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   data/preprocessingMinfiEwasWater/phenoLC.csv \
-  rData/svaEnmix/metrics/ctrlsva.done \
+  data/svaEnmix/sva/summary_full_sva2.txt \
   data/preprocessingPheno/phenoT1.csv \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv
@@ -51,7 +51,7 @@ FIRST4 = \
   rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   data/preprocessingMinfiEwasWater/phenoLC.csv \
-  rData/svaEnmix/metrics/ctrlsva.done \
+  data/svaEnmix/sva/summary_full_sva2.txt \
   data/preprocessingPheno/phenoT1.csv \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv \
@@ -68,7 +68,7 @@ F3LME = \
   rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData \
   data/preprocessingMinfiEwasWater/phenoLC.csv \
-  rData/svaEnmix/metrics/ctrlsva.done \
+  data/svaEnmix/sva/summary_full_sva2.txt \
   data/preprocessingPheno/phenoT1.csv \
   data/preprocessingPheno/phenoT2.csv \
   data/preprocessingPheno/phenoT1T2.csv \
@@ -205,7 +205,7 @@ clean:
 status:
 	@echo "===== Pipeline Status ====="
 	@test -e rData/preprocessingMinfiEwasWater/objects/RGSet.RData && echo "? Step 1: preprocessingMinfiEwasWater done" || echo "? Step 1: preprocessingMinfiEwasWater outcome file missing"
-	@test -e data/svaEnmix/sva/anova_reduced_sva3.txt && echo "? Step 2: SVA done" || echo "? Step 2: SVA outcome file missing"
+	@test -e data/svaEnmix/sva/summary_full_sva2.txt && echo "? Step 2: SVA done" || echo "? Step 2: SVA outcome file missing"
 	@test -e data/preprocessingPheno/phenoT1T2.csv && echo "? Step 3: preprocessingPheno done" || echo "? Step 3: preprocessingPheno outcome file missing"
 	@test -e data/methylationGLM_T1/$(MODEL)/annotatedGLM.csv && echo "? Step 4: methylationGLM_T1 done" || echo "? Step 4: methylationGLM_T1 outcome file missing"
 	@test -e data/methylationGLMM_T1T2/$(MODEL)/annotatedLME.csv && echo "? Step 5: methylationGLMM_T1T2 done" || echo "? Step 5: methylationGLMM_T1T2 outcome file missing"
