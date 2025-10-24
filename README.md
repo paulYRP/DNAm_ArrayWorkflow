@@ -10,7 +10,7 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 
 --------------
 ## Tutorials:
-- [**DNA Methylation Tutorial**](https://n10962646.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
+- [**DNA Methylation Tutorial**](https://paulyrp.github.io/2025CGPHNeurogenomicsWorkshop/tutorial.html)
 - [**Getting Started**](https://github.com/paulYRP/DNAm_ArrayWorkflow/wiki/Getting-Started)
 - [**Requirements**](https://github.com/paulYRP/DNAm_ArrayWorkflow/wiki/Requirements)
 
