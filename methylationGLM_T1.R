@@ -862,16 +862,19 @@ annotateGLM <- function(
         cleanedSummaries <- lapply(modelNames, function(modelName) {
           df <- summaryList[[modelName]]
           
-          coefName <- unique(df$Coefficient)
-          if (length(coefName) > 1) {
-            warning("Multiple coefficients found in ", modelName, 
-                    ". Using the first: ", coefName[1])
-            coefName <- coefName[1]
-          }
-          
-          df[[paste0(coefName, "P.Value")]] <- df$`Pr(>|t|)`
-          df <- df[, c("CpG", paste0(coefName, "P.Value"))]
-          return(df)
+          coefNames <- unique(df$Coefficient)
+          dfList <- lapply(coefNames, function(coefName) {
+            subdf <- df[df$Coefficient == coefName, ]
+            subdf[[paste0(coefName, "P.Value")]] <- subdf$`Pr(>|t|)`
+            subdf <- subdf[, c("CpG", paste0(coefName, "P.Value"))]
+            return(subdf)
+          })
+        
+        # Merge multiple coefficient data.frames by CpG
+        mergedCoef <- Reduce(function(x, y) merge(x, y, by = "CpG", all = TRUE),
+                             dfList)
+        return(mergedCoef)
+        
         })
         
         mergedSummary <- Reduce(function(x, y) merge(x, 
@@ -888,7 +891,7 @@ annotateGLM <- function(
                                   annDF, by = "CpG", all.x = TRUE)
         
         finalCols <- c("CpG", 
-                       unlist(lapply(cleanedSummaries, function(df) colnames(df)[2])), 
+                       unlist(lapply(cleanedSummaries, function(df) colnames(df)[-1])), 
                        annotationCols)
         
         annotatedResults <- annotatedResults[, finalCols]
