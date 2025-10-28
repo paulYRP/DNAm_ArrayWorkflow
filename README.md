@@ -19,9 +19,9 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 
 ### 28/10/2025
 - Added support for **multiple models** using the `MODEL` and `MODELS` variables inside the Makefile.
-- Each model runs in **isolated directories**.
   - `MODEL ?= model1`, sets the default model if none is specified.
-  - `MODELS = model1 model2 model3`, defines all models to run in parallel.    
+  - `MODELS = model1 model2 model3`, defines all models to run in parallel.
+- Each model runs in **isolated directories**. 
 - Parallel execution added using:
   - `make models -j3`, runs the **entire pipeline** for all models in parallel. `-j3` refers to three models.
   - `make f3_models -j3`, runs **Steps 1–3** in parallel for all models.
