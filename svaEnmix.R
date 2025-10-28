@@ -14,7 +14,6 @@
 #   --nSamples 50 \
 #   --SampleID SampleID \
 #   --scriptLabel svaEnmix \
-#   --baseDataFolder figures \
 #   --sepType "," \
 #   --SentrixIDColumn SentrixID \
 #   --SentrixPositionColumn SentrixPosition \
@@ -55,7 +54,6 @@ suppressPackageStartupMessages({
 #   --SampleID               [STR]    Column name to assign sample names (e.g., SampleID)
 
 #   --scriptLabel            [STR]    Script label for tagging folders/outputs (e.g., "svaEnmix")
-#   --baseDataFolder         [DIR]    Root folder to store plots and .RData outputs (e.g., "rData")
 
 #   --sepType                [STR]    Field separator in phenotype file ("," or "\\t")
 #   --SentrixIDColumn        [STR]    Column name for Sentrix IDs (e.g., "SentrixID")
@@ -83,10 +81,7 @@ opt <- parse_args(OptionParser(option_list = list(
   make_option("--SentrixPositionColumn", type = "character", default = "SentrixPosition", help = "Column name for Sentrix Position used in shaping SVA plots"),
   make_option("--ctrlSvaPercVar", type = "double", default = 0.90, help = "Percentage variance explained for ctrlSVA [default: 0.90]"),
   make_option("--ctrlSvaFlag", type = "integer", default = 1, help = "ctrlSVA flag parameter [default: 1]"),
-  
   make_option("--scriptLabel", default = "svaEnmix", help = "Label for output folders/logs"),
-  make_option("--baseDataFolder", default = "figures", help = "Base folder for figures"),
-  
   make_option("--tiffWidth", type = "integer", default = 2000),
   make_option("--tiffHeight", type = "integer", default = 1000),
   make_option("--tiffRes", type = "integer", default = 150)
@@ -98,7 +93,7 @@ opt <- parse_args(OptionParser(option_list = list(
 # ----------- Logging Setup -----------
 dir.create(opt$outputLogs, recursive = TRUE, showWarnings = FALSE)
 
-logFilePath <- file.path(opt$outputLogs, paste0("log_", opt$scriptLabel, ".txt"))
+logFilePath <- file.path(opt$outputLogs,"log_svaEnmix.txt")
 logCon <- file(logFilePath, open = "wt")  
 
 sink(logCon, split = TRUE)                     
@@ -118,18 +113,15 @@ cat("SampleID column: ", opt$SampleID, "\n")
 cat("Sentrix ID column: ", opt$SentrixIDColumn, "\n")
 cat("Sentrix Position column: ", opt$SentrixPositionColumn, "\n")
 cat("Script label: ", opt$scriptLabel, "\n")
-cat("Base data folder: ", opt$baseDataFolder, "\n")
 cat("ctrlSva percvar: ", opt$ctrlSvaPercVar, "\n")
 cat("ctrlSva flag: ", opt$ctrlSvaFlag, "\n")
 cat("TIFF dimensions (WxH): ", opt$tiffWidth, "x", opt$tiffHeight, " at", opt$tiffRes, "dpi\n")
 # =============================================================================
 
 # ----------- Directory Setup for Figures -----------
-dir.create(file.path("figures", opt$scriptLabel, "sva"), showWarnings = FALSE, 
+dir.create(file.path("figures", opt$scriptLabel), showWarnings = FALSE, 
            recursive = TRUE)
-dir.create(file.path("figures", opt$scriptLabel, "norm"), showWarnings = FALSE, 
-           recursive = TRUE)
-dir.create(file.path("data", opt$scriptLabel, "sva"), showWarnings = FALSE, 
+dir.create(file.path("data", opt$scriptLabel), showWarnings = FALSE, 
            recursive = TRUE)
 cat("=======================================================================\n")
 
@@ -180,17 +172,11 @@ cat("Surrogate variables matrix (first few rows):\n")
 print(head(sva))
 
 # ----------- Plot SVA Colored by SentrixID -----------
-sentrixID <- pData(RGSet)[[opt$SentrixIDColumn]]
-
-cat("Raw SentrixID preview:\n")
-print(head(sentrixID))
-
-sentrixID <- as.character(sentrixID)
-sentrixID <- as.factor(sentrixID)
+sentrixID <- as.factor(pData(RGSet)[[opt$SentrixIDColumn]])
 
 # Create TIFF output
 svaSentrixPath <- file.path("figures", 
-                        opt$scriptLabel, "sva", "sva_SentrixID.tiff")
+                        opt$scriptLabel, "sva_SentrixID.tiff")
 tiff(file = svaSentrixPath,
      width = opt$tiffWidth,
      height = opt$tiffHeight,
@@ -213,8 +199,7 @@ cat("SVA Sentrix plot saved to: ", svaSentrixPath, "\n")
 # ----------- Plot SVA Colored by SentrixPosition -----------
 sentrixPos <- as.factor(pData(RGSet)[[opt$SentrixPositionColumn]])
 
-svaPositionpath <- file.path("figures", opt$scriptLabel, 
-                         "sva", "sva_SentrixPosition.tiff")
+svaPositionpath <- file.path("figures", opt$scriptLabel, "sva_SentrixPosition.tiff")
 
 tiff(file = svaPositionpath,
      width = opt$tiffWidth,
@@ -271,11 +256,11 @@ lmsvaRed <- vector("list", K)
 
 # ----------- Save summaries of full models -----------
 capture.output(summary(lmsvaFull[[1]]),
-               file = file.path("data", opt$scriptLabel, "sva", "summary_full_sva1.txt"))
+               file = file.path("data", opt$scriptLabel, "summary_full_sva1.txt"))
 
 if (K >= 2) {
   capture.output(summary(lmsvaFull[[2]]),
-                 file = file.path("data", opt$scriptLabel, "sva", "summary_full_sva2.txt"))
+                 file = file.path("data", opt$scriptLabel, "summary_full_sva2.txt"))
 }
 
 # Perform backward elimination and write ANOVA output
@@ -289,11 +274,11 @@ for(i in 1:K){
     lmtmp = update(lmtmp, paste(".~. - ", ttmp) )
     capture.output(dttmp,
                    file = file.path("data", 
-                                    opt$scriptLabel, "sva", paste0("dropterm_step_sva", i, ".txt")),
+                                    opt$scriptLabel, paste0("dropterm_step_sva", i, ".txt")),
                    append = TRUE)
     capture.output(summary(lmtmp),
                    file = file.path("data", 
-                                    opt$scriptLabel, "sva", paste0("dropterm_model_sva", i, ".txt")),
+                                    opt$scriptLabel, paste0("dropterm_model_sva", i, ".txt")),
                    append = TRUE)
   }
   
@@ -304,11 +289,11 @@ for(i in 1:K){
 for (i in 1:K) {
   capture.output(anova(lmsvaFull[[i]]),
                  file = file.path("data", 
-                                  opt$scriptLabel, "sva", paste0("anova_full_sva", i, ".txt")))
+                                  opt$scriptLabel, paste0("anova_full_sva", i, ".txt")))
   
   capture.output(anova(lmsvaRed[[i]]),
                  file = file.path("data", 
-                                  opt$scriptLabel, "sva", paste0("anova_reduced_sva", i, ".txt")))
+                                  opt$scriptLabel, paste0("anova_reduced_sva", i, ".txt")))
 }
 cat("=======================================================================\n")
 
@@ -317,8 +302,8 @@ cat("=======================================================================\n")
 # Prepare output TIFF file
 
 svaSentrixPositionPath <- file.path("figures", 
-                                    opt$scriptLabel, "sva", "sva_SentrixIDPosition.tiff")
-
+                                    opt$scriptLabel, "sva_SentrixIDPosition.tiff")
+ 
 tiff(file = svaSentrixPositionPath,
      width = opt$tiffWidth, 
      height = opt$tiffHeight, 

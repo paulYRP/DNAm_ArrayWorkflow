@@ -72,18 +72,20 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--outputRDataMerge", default = "rData/preprocessingPheno/mergeData", help = "Directory to save processed RData objects mergedata", metavar = "DIR"),
         make_option("--sexColumn", type = "character", default = "Sex", help = "Column in sample data with sample sex (e.g., 'Sex', coded F/M)"),
         make_option("--outputLogs", default = "logs/", help = "Directory for all log output [default: %default]", metavar = "DIR"),
-        make_option("--scriptLabel", default = "preprocessingPheno", help = "Label for log file naming [default: %default]", metavar = "STR")
-        
+        make_option("--scriptLabel", default = "preprocessingPheno", help = "Label for log file naming [default: %default]", metavar = "STR"),
+        make_option("--outputDir", default = "data/preprocessingPheno", help = "Directory to save Beta CSV and ZIP outputs [default: %default]", metavar = "DIR")
 )))
 
 dir.create(opt$outputRData, recursive = TRUE, showWarnings = FALSE)
 dir.create(opt$outputRDataMerge, recursive = TRUE, showWarnings = FALSE)
 dir.create(opt$outputLogs, recursive = TRUE, showWarnings = FALSE)
 dir.create(opt$outputPheno, recursive = TRUE, showWarnings = FALSE)
+dir.create(opt$outputDir, recursive = TRUE, showWarnings = FALSE)
+
 #===============================================================================
 
 # ----------- Logging Setup -----------
-logFilePath <- file.path(opt$outputLogs, paste0("log_", opt$scriptLabel, ".txt"))
+logFilePath <- file.path(opt$outputLogs, "log_preprocessingPheno.txt")
 logCon <- file(logFilePath, open = "wt")
 
 sink(logCon, split = TRUE)
@@ -258,13 +260,15 @@ betaCSV <- tibble::rownames_to_column(betaCSV, var = "ProbeID")
 dim(betaCSV)
 print(head(betaCSV)[1:5, 1:5])
 
-write.csv(betaCSV, file = "data/preprocessingPheno/beta.csv", row.names = TRUE)
-cat("Beta csv file saved for ClockFundation to data/preprocessingPheno/.\n")
+betaCSVPath <- file.path(opt$outputDir, "beta.csv")
+write.csv(betaCSV, file = betaCSVPath, row.names = TRUE)
+cat("Beta CSV file for ClockFundation saved to:", betaCSVPath, "\n")
 
-zip(zipfile = "data/preprocessingPheno/beta.zip", 
-    files = "data/preprocessingPheno/beta.csv", 
-    flags = "-j")
-cat("Beta zip file saved for ClockFundation to data/preprocessingPheno/.\n")
+zipFile <- file.path(opt$outputDir, "beta.zip")
+
+zip(zipfile = zipFile, files = betaCSVPath, flags = "-j")
+
+cat("Beta ZIP file for ClockFundation saved to:", zipFile, "\n")
 
 # ----------- Preprocessing CSV for Horvath Calculator -----------
 
@@ -282,8 +286,10 @@ if (!all(uniqueSex %in% c("Male", "Female"))) {
   cat("Sex column already contains 'Male' and 'Female'. Skipping recoding.\n")
 }
 
-write.csv(pheno, "data/preprocessingPheno/phenoCF.csv", row.names = FALSE)
-cat("Sample file saved for ClockFundation to data/preprocessingPheno/.\n")
+phenoCSVPath <- file.path(opt$outputDir, "phenoCF.csv")
+
+write.csv(pheno, file = phenoCSVPath, row.names = FALSE)
+cat("Sample file for ClockFundation saved to:", phenoCSVPath, "\n")
 
 cat("=======================================================================\n")
 

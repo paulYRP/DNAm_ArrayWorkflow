@@ -129,7 +129,9 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--crossReactivePath", default = "data/preprocessingMinfiEwasWater/12864_2024_10027_MOESM8_ESM.csv", type = "character", help = "Path to cross-reactive probe file"),
         make_option("--plotGroupVar", default = "Sex", help = "Grouping variable for density plots"),
         make_option("--lcRef", default = "salivaEPIC", help = "Reference for estimateLC (e.g., salivaEPIC, saliva, Reinius+Lin ...)"),
-        make_option("--phenoOrder", default = "SampleName;Timepoint;Sex;PredSex;Basename;SentrixID;SentrixPosition", help = "Semicolon-separated leading column order; others appended")
+        make_option("--phenoOrder", default = "SampleName;Timepoint;Sex;PredSex;Basename;SentrixID;SentrixPosition", help = "Semicolon-separated leading column order; others appended"),
+        make_option("--lcPhenoDir", default = "data/preprocessingMinfiEwasWater", help = "Output directory for the phenoLC.csv file [default: %default]")
+        
         
 )))
 
@@ -140,7 +142,7 @@ opt$normMethodList  <- strsplit(opt$normMethods, ";")[[1]]
 # ==============================================================================
 
 # ----------- Logging Setup -----------
-logFilePath <- file.path(opt$outputLogs, paste0("log_", opt$scriptLabel, ".txt"))
+logFilePath <- file.path(opt$outputLogs, "log_preprocessingMinfiEwasWater.txt")
 dir.create(opt$outputLogs, recursive = TRUE, showWarnings = FALSE)
 
 logCon <- file(logFilePath, open = "wt")  
@@ -777,7 +779,8 @@ leadCols <- strsplit(opt$phenoOrder, ";", fixed = TRUE)[[1]]
 leadCols <- leadCols[leadCols %in% colnames(phenoLC)]
 phenoLC <- dplyr::select(phenoLC, dplyr::all_of(leadCols), dplyr::everything())
 
-lcPhenoOut <- "data/preprocessingMinfiEwasWater/phenoLC.csv"
+if (!dir.exists(opt$lcPhenoDir)) dir.create(opt$lcPhenoDir, recursive = TRUE)
+lcPhenoOut <- file.path(opt$lcPhenoDir, "phenoLC.csv")
 write.csv(phenoLC, 
           file = lcPhenoOut, 
           row.names = FALSE)

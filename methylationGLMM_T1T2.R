@@ -105,7 +105,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--plotWidth", default = 2000, type = "integer", help = "Plot width in pixels [default: %default]"),
         make_option("--plotHeight", default = 1000, type = "integer", help = "Plot height in pixels [default: %default]"),
         make_option("--plotDPI", default = 150, type = "integer", help = "Plot DPI (resolution) [default: %default]"),
-        make_option("--interactionTerm", default = "Timepoint", help = "Variable to interact with phenotype in LME model [default: %default]"),
+        make_option("--interactionTerm", default = NULL, help = "Variable to interact with phenotype in LME model [default: None]"),
         make_option("--saveSignificantInteractions", action = "store_true", default = TRUE, help = "Enable saving significant interaction CpG results [default: %default]"),
         make_option("--significantInteractionDir", default = "preliminaryResults/cpgs/methylationGLMM_T1T2", help = "Directory to save significant interaction CpGs [default: %default]"),
         make_option("--significantInteractionPval", type = "double", default = 0.05, help = "P-value threshold for significant interactions [default: %default]"),
@@ -291,11 +291,16 @@ lme <- function(
                                 }
                         }
                         
-                        intFormula <- paste(phenoScore, "*", interactionTerm)
-                        fixedTerms <- setdiff(covariateNames, 
-                                              c(phenoScore, interactionTerm))
-                        fixedPart <- paste(c(intFormula, fixedTerms), 
-                                           collapse = " + ")
+                        if (!is.null(interactionTerm) && interactionTerm != "") {
+                          intFormula <- paste(phenoScore, "*", interactionTerm)
+                          fixedTerms <- setdiff(covariateNames, c(phenoScore, 
+                                                                  interactionTerm))
+                          fixedPart <- paste(c(intFormula, fixedTerms), collapse = " + ")
+                        } else {
+                          fixedTerms <- setdiff(covariateNames, phenoScore)
+                          fixedPart <- paste(c(phenoScore, fixedTerms), collapse = " + ")
+                        }
+                        
                         form <- as.formula(paste("beta ~", 
                                                  fixedPart, 
                                                  "+ (1|", 
@@ -336,11 +341,26 @@ for (pheno in opt$phenotypeList) {
         cat("Running LME for:", pheno, "\n")
        
         prsVar <- if (pheno %in% names(opt$prsMapList)) opt$prsMapList[[pheno]] else NULL
-        allCovariates <- if (!is.null(prsVar)) c(opt$covariateList, prsVar) else opt$covariateList
-        fixedTerms <- setdiff(allCovariates, c(pheno, opt$interactionTerm))
-        modelFormula <- paste("~", 
-                              paste(c(paste0(pheno, "*", opt$interactionTerm), fixedTerms), collapse = " + "), 
-                              "+ (1|", opt$personVar, ")")
+        allCovariates <- if (!is.null(prsVar)) c(opt$covariateList, 
+                                                 prsVar) else opt$covariateList
+        
+        if (!is.null(opt$interactionTerm) && opt$interactionTerm != "") {
+          fixedTerms <- setdiff(allCovariates, c(pheno, opt$interactionTerm))
+          modelFormula <- paste("~",
+                                paste(c(paste0(pheno, "*", opt$interactionTerm), 
+                                        fixedTerms),
+                                      collapse = " + "),
+                                "+ (1|", opt$personVar, ")")
+        } else {
+          fixedTerms <- setdiff(allCovariates, pheno)
+          modelFormula <- paste("~",
+                                paste(c(pheno, fixedTerms),
+                                      collapse = " + "),
+                                "+ (1|", opt$personVar, ")")
+        }
+        
+        
+        
         cat("Formula:", modelFormula, "\n")
         
         
@@ -381,6 +401,13 @@ cpgsLME <- function(
                 
 ) {
         cat("Extracting LME interaction effects for:", phenotype, "\n")
+  
+        if (is.null(interactionTerm) || interactionTerm == "") {
+          cat("No interaction term provided — extracting main effects only.\n")
+        } else {
+          cat("Interaction term detected:", interactionTerm, "\n")
+        }
+  
         
         cpgNames <- names(fitList)
         if (is.null(chunkSize)) {
@@ -422,8 +449,14 @@ cpgsLME <- function(
             if (is.null(modelOutput) || is.null(modelOutput$coef)) next
 
             coefTable <- modelOutput$coef
-            pattern <- paste0("^", phenotype, ".*:", interactionTerm)
-            matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
+            
+            if (!is.null(interactionTerm) && interactionTerm != "") {
+              pattern <- paste0("^", phenotype, ".*:", interactionTerm)
+              matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
+            } else {
+              pattern <- paste0("^", phenotype, "$")
+              matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
+            }
 
             if (length(matchedTerms) == 0) next
 
@@ -521,11 +554,21 @@ saveSignificantInteractions <- function(
         resultDir <- file.path(baseDir, resultName)
         if (!dir.exists(resultDir)) dir.create(resultDir, recursive = TRUE)
         
+        if (is.null(interactionTerm) || interactionTerm == "") {
+          cat("No interaction term detected — extracting main effects for", 
+              resultName, "\n")
+          pattern <- paste0("^", resultName, "$")   
+        } else {
+          cat("Interaction term detected:", interactionTerm, "- extracting interaction effects for", resultName, "\n")
+          pattern <- paste0(":")  
+        }
+        
         for (i in seq_along(resultList)) {
                 coefTable <- resultList[[i]]$coef
                 cpgName <- names(resultList)[i]
                 
-                interactionRows <- grep(":", rownames(coefTable), value = FALSE)
+                matchedRows <- grep(pattern, rownames(coefTable), value = FALSE)
+                
                 if (length(interactionRows) > 0) {
                         interactionPvals <- coefTable[interactionRows, "Pr(>|t|)"]
                         if (any(interactionPvals < pvalThreshold, na.rm = TRUE)) {
