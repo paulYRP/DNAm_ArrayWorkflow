@@ -17,8 +17,6 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 --------------
 ## News
 
-Here’s a new **News section entry** following your exact style and tone — clear, concise, and consistent with your example — describing the new `MODEL` and `MODELS` features and parallel execution logic:
-
 ### 28/10/2025
 
 - Added support for **multiple models** using the `MODEL` and `MODELS` variables inside the Makefile.
