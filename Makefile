@@ -32,10 +32,10 @@ models:
 	@echo "Running models in parallel: $(MODELS)"
 	@$(MAKE) -j $(words $(MODELS)) $(addprefix run-, $(MODELS))
 
-$(foreach m,$(MODELS),$(eval run-$(m): 
-	@echo ">>> Starting full pipeline for: $(m)"
-	$(MAKE) -j1 all MODEL=$(m)
-	@echo "<<< Finished full pipeline for: $(m)"
+$(foreach m,$(MODELS),$(eval run-$(m):; \
+	@echo ">>> Starting full pipeline for: $(m)"; \
+	$(MAKE) -j1 all MODEL=$(m); \
+	@echo "<<< Finished full pipeline for: $(m)" \
 ))
 
 default: all
@@ -76,11 +76,11 @@ f3_models:
 	@echo "Running f3 (Steps 1–3) in parallel: $(MODELS)"
 	@$(MAKE) -j $(words $(MODELS)) $(addprefix runf3-, $(MODELS))
 
-$(foreach m,$(MODELS),$(eval runf3-$(m): 
-	@echo ">>> Starting f3 for: $(m)"
-	$(MAKE) -j1 f3 MODEL=$(m)
-	@echo "<<< Finished f3 for: $(m)"
-)
+$(foreach m,$(MODELS),$(eval runf3-$(m):;  \
+	@echo ">>> Starting f3 for: $(m)"; \
+	$(MAKE) -j1 f3 MODEL=$(m); \
+	@echo "<<< Finished f3 for: $(m)" \
+))
 
 # ----------------------------------------------------
 # Group target: f4 (Steps 1 to 4 only)
@@ -106,11 +106,12 @@ f4_models:
 	@echo "Running f4 (Steps 1–4) in parallel: $(MODELS)"
 	@$(MAKE) -j $(words $(MODELS)) $(addprefix runf4-, $(MODELS))
 
-$(foreach m,$(MODELS),$(eval runf4-$(m): 
-	@echo ">>> Starting f4 for: $(m)"
-	$(MAKE) -j1 f4 MODEL=$(m)
-	@echo "<<< Finished f4 for: $(m)"
+$(foreach m,$(MODELS),$(eval runf4-$(m):; \
+	@echo ">>> Starting f4 for: $(m)"; \
+	$(MAKE) -j1 f4 MODEL=$(m); \
+	@echo "<<< Finished f4 for: $(m)" \
 ))
+
 # ----------------------------------------------------
 # Group target: f3lme (Steps 1 to 3 and LME only)
 # ----------------------------------------------------
@@ -136,11 +137,12 @@ f3lme_models:
 	@echo "Running f3lme (Steps 1–3 + LME) in parallel: $(MODELS)"
 	@$(MAKE) -j $(words $(MODELS)) $(addprefix runf3lme-, $(MODELS))
 
-$(foreach m,$(MODELS),$(eval runf3lme-$(m):
-	@echo ">>> Starting f3lme for: $(m)"
-	$(MAKE) -j1 f3lme MODEL=$(m)
-	@echo "<<< Finished f3lme for: $(m)"
+$(foreach m,$(MODELS),$(eval runf3lme-$(m):; \
+	@echo ">>> Starting f3lme for: $(m)"; \
+	$(MAKE) -j1 f3lme MODEL=$(m); \
+	@echo "<<< Finished f3lme for: $(m)" \
 ))
+
 # ----------------------------------------------------
 # Step 1: Minfi Preprocessing
 # ----------------------------------------------------
@@ -167,6 +169,7 @@ data/$(MODEL)/preprocessingMinfiEwasWater/phenoLC.csv: preprocessingMinfiEwasWat
 data/$(MODEL)/svaEnmix/summary_full_sva2.txt: svaEnmix.R data/$(MODEL)/preprocessingMinfiEwasWater/phenoLC.csv
 	Rscript svaEnmix.R \
 	  --phenoFile data/$(MODEL)/preprocessingMinfiEwasWater/phenoLC.csv \
+	  --rgsetData rData/$(MODEL)/preprocessingMinfiEwasWater/objects/RGSet.RData \
 	  --outputLogs logs/$(MODEL) \
 	  --scriptLabel $(MODEL)/svaEnmix \
 	  --SampleID SID \
