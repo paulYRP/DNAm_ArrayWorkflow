@@ -17,6 +17,29 @@ This repository contains a reproducible pipeline for DNA methylation (DNAm) anal
 --------------
 ## News
 
+Here’s a new **News section entry** following your exact style and tone — clear, concise, and consistent with your example — describing the new `MODEL` and `MODELS` features and parallel execution logic:
+
+### 28/10/2025
+
+- Added support for **multiple models** using the `MODEL` and `MODELS` variables inside the Makefile.
+- Each model runs in **isolated directories**.
+- New variable definitions in Makefile:
+
+  - `MODEL ?= model1` → sets the default model if none is specified.
+  - `MODELS = model1 model2 model3`, defines all models to run in parallel.
+    
+- Parallel execution added using:
+
+  - `make models -j3` → runs the **entire pipeline** for all models in parallel.
+  - `make f3_models -j3` → runs **Steps 1–3** in parallel for all models.
+  - `make f4_models -j3` → runs **Steps 1–4** in parallel for all models.
+  - `make f3lme_models -j3` → runs **Steps 1–3 + LME** in parallel for all models.
+    
+- Individual model runs remain supported:
+
+  - `make all MODEL=model1` → runs the full pipeline for a single model.
+  - `make f3 MODEL=model1` → runs the first 3 steps for that model only.
+    
 ### 21/08/2025
 - It is compatible with all types of tissues using [ewastools](https://hhhh5.github.io/ewastools/articles/exemplary_ewas.html) 
 - `ctrlsva` added from [ENmix](https://www.bioconductor.org/packages/devel/bioc/vignettes/ENmix/inst/doc/ENmix.html) 
