@@ -12,7 +12,7 @@ FIGURES_DIR = figures
 
 # Variables
 
-MODEL ?= firefighter
+MODEL ?= profession
 MODELS = firefighter paramedic emergency
 
 # ----------------------------------------------------
@@ -238,14 +238,15 @@ data/$(MODEL)/methylationGLMM_T1T2/annotatedLME.csv: methylationGLMM_T1T2.R rDat
 	  --outputPlots figures/$(MODEL)/methylationGLMM_T1T2 \
 	  --personVar person \
 	  --timeVar Timepoint \
-	  --phenotypes Timepoint \
+	  --phenotypes Profession \
 	  --covariates Sex,Age,Ethnicity,TraumaDefinition,Leukocytes,Epithelial.cells,BMI \
-	  --factorVars Sex,Ethnicity,TraumaDefinition,Timepoint \
+	  --factorVars Sex,Ethnicity,TraumaDefinition,Timepoint,Profession \
 	  --lmeLibs lme4,lmerTest \
 	  --libPath ~/R/x86_64-pc-linux-gnu-library/4.4 \
 	  --cpgPrefix cg \
 	  --cpgLimit NA \
 	  --nCores 64 \
+	  --interactionTerm Timepoint \
 	  --saveSignificantInteractions \
 	  --significantInteractionDir preliminaryResults/$(MODEL)/cpgs/methylationGLMM_T1T2 \
 	  --significantInteractionPval 0.00001 \

@@ -454,7 +454,7 @@ cpgsLME <- function(
               pattern <- paste0("^", phenotype, ".*:", interactionTerm)
               matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
             } else {
-              pattern <- paste0("^", phenotype, "$")
+              pattern <- paste0("^", phenotype)
               matchedTerms <- grep(pattern, rownames(coefTable), value = TRUE)
             }
 
@@ -549,7 +549,8 @@ saveSignificantInteractions <- function(
                 resultList,
                 resultName = deparse(substitute(resultList)),
                 baseDir = opt$significantInteractionDir,
-                pvalThreshold = opt$significantInteractionPval
+                pvalThreshold = opt$significantInteractionPval,
+                interactionTerm = opt$interactionTerm
 ) {
         resultDir <- file.path(baseDir, resultName)
         if (!dir.exists(resultDir)) dir.create(resultDir, recursive = TRUE)
@@ -557,28 +558,29 @@ saveSignificantInteractions <- function(
         if (is.null(interactionTerm) || interactionTerm == "") {
           cat("No interaction term detected — extracting main effects for", 
               resultName, "\n")
-          pattern <- paste0("^", resultName, "$")   
+          pattern <- paste0("^", resultName)   
         } else {
-          cat("Interaction term detected:", interactionTerm, "- extracting interaction effects for", resultName, "\n")
-          pattern <- paste0(":")  
+          cat("Interaction term detected:", interactionTerm, 
+              "- extracting interaction effects for", resultName, "\n")
+          pattern <- paste0("^", phenotype, ".*:", interactionTerm)
         }
         
         for (i in seq_along(resultList)) {
-                coefTable <- resultList[[i]]$coef
-                cpgName <- names(resultList)[i]
-                
-                matchedRows <- grep(pattern, rownames(coefTable), value = FALSE)
-                
-                if (length(interactionRows) > 0) {
-                        interactionPvals <- coefTable[interactionRows, "Pr(>|t|)"]
-                        if (any(interactionPvals < pvalThreshold, na.rm = TRUE)) {
-                                cpgDir <- file.path(resultDir, cpgName)
-                                if (!dir.exists(cpgDir)) dir.create(cpgDir)
-                                
-                                outputFile <- file.path(cpgDir, paste0(cpgName, ".txt"))
-                                write.table(coefTable, file = outputFile, sep = "\t", quote = FALSE)
-                        }
-                }
+          coefTable <- resultList[[i]]$coef
+          cpgName <- names(resultList)[i]
+          matchedRows <- grep(pattern, rownames(coefTable), value = FALSE)
+          
+          if (length(matchedRows) > 0) {
+            termPvals <- coefTable[matchedRows, "Pr(>|t|)"]
+            if (any(termPvals  < pvalThreshold, na.rm = TRUE)) {
+              cpgDir <- file.path(resultDir, cpgName)
+              if (!dir.exists(cpgDir)) dir.create(cpgDir)
+              
+              outputFile <- file.path(cpgDir, paste0(cpgName, ".txt"))
+              write.table(coefTable, file = outputFile, 
+                          sep = "\t", quote = FALSE)
+            }
+          }
         }
 }
 

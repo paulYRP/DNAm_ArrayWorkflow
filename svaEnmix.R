@@ -71,6 +71,7 @@ suppressPackageStartupMessages({
 # ----------- Command Line Arguments -----------
 opt <- parse_args(OptionParser(option_list = list(
   make_option("--phenoFile", default = "data/preprocessingMinfiEwasWater/phenoLC.csv", help = "Path to phenotype CSV file", metavar = "FILE"),
+  make_option("--rgsetData", type = "character", default = "rData/preprocessingMinfiEwasWater/objects/RGSet.RData", help = "Path to the RGSet RData object [default = %default]"),
   make_option("--sepType", default = "" ,  type = "character", help = "Separator for phenotype file (e.g., ',' or '\\t')"),
   make_option("--outputLogs", default = "logs/", help = "Directory for all output", metavar = "DIR"),
   make_option("--nSamples", type = "integer", default = NA, help = "Limit to first N samples [default: all]"),
@@ -155,7 +156,7 @@ print(head(targets[, 1:6]))
 cat("=======================================================================\n")
 
 # ----------- Load IDAT Files into RGSet -----------
-load("rData/preprocessingMinfiEwasWater/objects/RGSet.RData")
+load(opt$rgsetData)
 
 # Assign custom sample names
 sampleNames(RGSet) <- targets[[opt$SampleID]]
