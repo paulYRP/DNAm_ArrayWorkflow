@@ -562,7 +562,7 @@ saveSignificantInteractions <- function(
         } else {
           cat("Interaction term detected:", interactionTerm, 
               "- extracting interaction effects for", resultName, "\n")
-          pattern <- paste0("^", phenotype, ".*:", interactionTerm)
+          pattern <- paste0("^", resultName, ".*:", interactionTerm)
         }
         
         for (i in seq_along(resultList)) {
