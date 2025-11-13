@@ -118,7 +118,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--chunkSize", type="integer", default=10000, help="Number of CpGs to process per worker [default %default]"),
         make_option("--summaryTxtDir", default = "preliminaryResults/summary/methylationGLM_T1/glm", help = "Output directory to save summary text files [default: %default]", metavar = "DIR"),
         make_option("--fdrThreshold", type = "double", default = 0.05, help = "FDR threshold for significant CpGs [default: %default]"),
-        make_option("--padjmethod", default = "BH", help = "Method for multiple testing correction [default: %default]"),
+        make_option("--padjmethod", default = "fdr", help = "Method for multiple testing correction [default: %default]"),
         make_option("--annotationPackage", default = "IlluminaHumanMethylationEPICv2anno.20a1.hg38", help = "Annotation object name [default: %default]"),
         make_option("--annotationCols", default = "Name,chr,pos,UCSC_RefGene_Group,UCSC_RefGene_Name,Relation_to_Island,GencodeV41_Group", help = "Comma-separated annotation columns to retain [default: %default]"),
         make_option("--annotatedGLMOut", default = "data/methylationGLM_T1", help = "Path to save final annotated GLM results [default: %default]")
