@@ -72,7 +72,6 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--outputRDataMerge", default = "rData/preprocessingPheno/mergeData", help = "Directory to save processed RData objects mergedata", metavar = "DIR"),
         make_option("--sexColumn", type = "character", default = "Sex", help = "Column in sample data with sample sex (e.g., 'Sex', coded F/M)"),
         make_option("--outputLogs", default = "logs/", help = "Directory for all log output [default: %default]", metavar = "DIR"),
-        make_option("--scriptLabel", default = "preprocessingPheno", help = "Label for log file naming [default: %default]", metavar = "STR"),
         make_option("--outputDir", default = "data/preprocessingPheno", help = "Directory to save Beta CSV and ZIP outputs [default: %default]", metavar = "DIR")
 )))
 
