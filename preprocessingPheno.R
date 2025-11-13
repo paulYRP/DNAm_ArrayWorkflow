@@ -60,7 +60,7 @@ suppressPackageStartupMessages({
 # ----------- Define Input Arguments -----------
 opt <- parse_args(OptionParser(option_list = list(
         make_option("--phenoFile", default = "data/preprocessingMinfiEwasWater/phenoLC.csv", help = "Input phenotype CSV file [default: %default]", metavar = "FILE"),
-        make_option("--sepType", default = "" ,  type = "character", help = "Separator for phenotype file (e.g., ',' or '\\t')"),
+        make_option("--sepType", default = "" ,  type = "character", help = "Separator for phenotype file (e.g., ',' or '\\t')[default: %default] means NULL"),
         make_option("--betaPath", default = "rData/preprocessingMinfiEwasWater/metrics/beta_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to Beta matrix RData [default: %default]", metavar = "FILE"),
         make_option("--mPath", default = "rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to M-values RData [default: %default]", metavar = "FILE"),
         make_option("--cnPath", default = "rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to CN matrix RData [default: %default]", metavar = "FILE"),
