@@ -65,6 +65,7 @@ opt <- parse_args(OptionParser(option_list = list(
         make_option("--mPath", default = "rData/preprocessingMinfiEwasWater/metrics/m_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to M-values RData [default: %default]", metavar = "FILE"),
         make_option("--cnPath", default = "rData/preprocessingMinfiEwasWater/metrics/cn_NomFilt_MSetF_Flt_Rxy_Ds_Rc.RData", help = "Path to CN matrix RData [default: %default]", metavar = "FILE"),
         make_option("--SampleID", type = "character", default = "SampleName", help = "Column name to use as sample IDs"),
+        make_option("--timeVar", type = "character", default = "Timepoint", help = "Column name that identifies timepoints (e.g., 'Timepoint', 'Visit', 'Wave')"),
         make_option("--timepoints", default = "1,2", help = "Timepoints to subset for beta and M values", metavar = "T1,T2,T3"),
         make_option("--combineTimepoints", default = "1,2", help = "Timepoints to combine for longitudinal analysis", metavar = "T1,Tn"),
         make_option("--outputPheno", default = "data/preprocessingPheno/", help = "Path to save final phenotype CSVs", metavar = "DIR"),
@@ -101,6 +102,7 @@ cat("M-values path:            ", opt$mPath, "\n")
 cat("CN path:                  ", opt$cnPath, "\n\n")
 
 cat("Identifier column:        ", opt$SampleID, "\n")
+cat("Timepoint column:        ", opt$timeVar, "\n")
 cat("Timepoints (if present):  ", opt$timepoints, "\n")
 cat("Combine timepoints:       ", opt$combineTimepoints, "\n\n")
 cat("Sex column:               ", opt$sexColumn, "\n")
@@ -145,9 +147,13 @@ cat("=======================================================================\n")
 timepoints <- as.numeric(strsplit(opt$timepoints, ",")[[1]])
 cat("Subsetting to timepoints:", paste(timepoints, collapse = ", "), "\n")
 
+# Print available timepoints in the phenotype
+cat("Available values in", opt$timeVar, "column:\n")
+print(table(pheno[[opt$timeVar]], useNA = "ifany"))
+
 for (tp in timepoints) {
   # Subset phenotype by Timepoint
-  phenoSub <- subset(pheno, Timepoint == tp)
+  phenoSub <- subset(pheno, pheno[[opt$timeVar]] == tp)
   assign(paste0("phenoT", tp), phenoSub)
   
   # Subset matrices using SID (SampleID) from phenoSub
@@ -260,7 +266,7 @@ dim(betaCSV)
 print(head(betaCSV)[1:5, 1:5])
 
 betaCSVPath <- file.path(opt$outputDir, "beta.csv")
-write.csv(betaCSV, file = betaCSVPath, row.names = TRUE)
+write.csv(betaCSV, file = betaCSVPath, row.names = FALSE)
 cat("Beta CSV file for ClockFundation saved to:", betaCSVPath, "\n")
 
 zipFile <- file.path(opt$outputDir, "beta.zip")
