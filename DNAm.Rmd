@@ -31,13 +31,20 @@ library(tiff)
 
 ```{r, include=F}
 setwd(getwd())
+
+if (!exists("model")) {
+  model <- "default"
+}
+
+cat("Rendering report for :", model, "\n")
+
 ```
 
 # Quality Control Plots
 
 ```{r, echo=F, include=T, out.width="100%"}
 # Path to folder
-img_dir <- "figures/preprocessingMinfiEwasWater/enMix/"
+img_dir <- file.path("figures", model, "preprocessingMinfiEwasWater", "enMix")
 
 # List all jpg files
 imgs <- list.files(img_dir, pattern = "\\.jpg$", full.names = TRUE)
@@ -51,7 +58,7 @@ include_graphics(imgs)
 
 ```{r, echo=F, include=T, out.width="100%"}
 # Folder with TIFFs
-dir <- "figures/preprocessingMinfiEwasWater/qc/"
+dir <- file.path("figures", model, "preprocessingMinfiEwasWater", "qc")
 
 if (dir.exists(dir)) {
   
@@ -70,7 +77,7 @@ if (dir.exists(dir)) {
 # Post-processing and Filtering 
 
 ```{r, echo=F, include=T, out.width="100%"}
-dir <- "figures/preprocessingMinfiEwasWater/metrics/"
+dir <- file.path("figures", model, "preprocessingMinfiEwasWater", "metrics")
 
 if (dir.exists(dir)) {
   
@@ -89,7 +96,7 @@ if (dir.exists(dir)) {
 # Surrogate Variable Analysis
 
 ```{r, echo=F, include=T, out.width="100%"}
-dir <- "figures/svaEnmix/sva/"
+dir <- file.path("figures", model, "svaEnmix", "sva")
 
 if (dir.exists(dir)) {
   
@@ -109,7 +116,7 @@ if (dir.exists(dir)) {
 
 ```{r, echo=F, include=T, out.width="50%"}
 
-dir <- "figures/methylationGLM_T1/"
+dir <- file.path("figures", model, "methylationGLM_T1")
 
 if (dir.exists(dir)) {
   
@@ -142,7 +149,7 @@ if (dir.exists(dir)) {
 # Linear Mixed-Effects Model
 
 ```{r, echo=F, include=T, out.width="50%"}
-dir <- "figures/methylationGLMM_T1T2/"
+dir <- file.path("figures", model, "methylationGLMM_T1T2")
 
 if (dir.exists(dir)) {
   
